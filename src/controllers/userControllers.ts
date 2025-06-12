@@ -20,3 +20,24 @@ export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => 
         client.release();
     }
 }
+
+export const getUserById = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    const id = request.params.id;
+
+    if (!id) {
+        return reply.code(400).send({ message: 'Id is required' });
+    }
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'User not found' });
+        }
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
