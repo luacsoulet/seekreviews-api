@@ -6,6 +6,7 @@ import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from 'dotenv';
+import authRoutes from './routes/authRoutes';
 
 config();
 
@@ -94,6 +95,7 @@ app.register(jwt, {
     secret: process.env.JWT_SECRET || 'your-secret-key'
 });
 
+app.register(authRoutes, { prefix: '/api/v1/auth' });
 app.get('/api/v1/ping', async () => {
     return { status: 'ok' };
 });
