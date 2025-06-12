@@ -51,6 +51,10 @@ export const userFavorites = async (request: FastifyRequest<{ Params: { id: numb
 
     const client = await request.server.pg.connect();
     try {
+        const { rows: user } = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (user.length === 0) {
+            return reply.code(404).send({ message: 'User not found' });
+        }
         const { rows } = await client.query(
             `SELECT 
             favorites.id AS favorite_id,
