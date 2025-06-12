@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getUserById, getUsers, userFavorites } from "../controllers/userControllers";
-import { getUserByIdSchema, getUsersSchema, userFavoritesSchema } from "../dtos/userDtos";
+import { getUserById, getUsers, userFavorites, userSeen } from "../controllers/userControllers";
+import { getUserByIdSchema, getUsersSchema, userFavoritesSchema, userSeenSchema } from "../dtos/userDtos";
 import { authenticate } from "../middleware/auth";
 
 export default async function userRoutes(fastify: FastifyInstance) {
@@ -14,4 +14,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
     fastify.get('/:id/favorites', {
         schema: userFavoritesSchema,
     }, userFavorites);
+    fastify.get('/:id/seen', {
+        schema: userSeenSchema,
+    }, userSeen);
 }
