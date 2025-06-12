@@ -53,3 +53,37 @@ export const getUserByIdSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const userFavoritesSchema: FastifySchema = {
+    description: 'Get a user by id',
+    tags: ['Users'],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        200: {
+            description: 'User favorites fetched successfully',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    favorite_id: { type: 'number' },
+                    favorited_at: { type: 'string' },
+                    movie_id: { type: 'number', nullable: true },
+                    movie_title: { type: 'string', nullable: true },
+                    movie_cover: { type: 'string', nullable: true },
+                    book_id: { type: 'number', nullable: true },
+                    book_title: { type: 'string', nullable: true },
+                    book_cover: { type: 'string', nullable: true }
+                }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
