@@ -21,7 +21,7 @@ export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => 
     }
 }
 
-export const getUserById = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+export const getUserById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
     const id = request.params.id;
 
     if (!id) {
