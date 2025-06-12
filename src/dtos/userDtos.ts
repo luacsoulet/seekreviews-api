@@ -121,3 +121,39 @@ export const userSeenSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const modifyUserSchema: FastifySchema = {
+    description: 'Modify a user',
+    tags: ['Users'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            username: { type: 'string', nullable: true },
+            email: { type: 'string', nullable: true },
+            description: { type: 'string', nullable: true }
+        }
+    },
+    response: {
+        200: {
+            description: 'User modified successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                username: { type: 'string' },
+                email: { type: 'string' },
+                description: { type: 'string' }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
