@@ -1,4 +1,5 @@
 import { FastifySchema } from "fastify";
+import { error400, error401, error403, error404, error500 } from "../utils/errorTypes";
 
 export const getUsersSchema: FastifySchema = {
     description: 'Get all users',
@@ -19,36 +20,20 @@ export const getUsersSchema: FastifySchema = {
                 }
             }
         },
-        401: {
-            description: 'Unauthorized',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        },
-        403: {
-            description: 'Forbidden',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        },
-        500: {
-            description: 'Internal server error',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        }
+        401: error401,
+        403: error403,
+        500: error500
     }
 }
 
 export const getUserByIdSchema: FastifySchema = {
     description: 'Get a user by id',
     tags: ['Users'],
-    security: [{ bearerAuth: [] }],
     params: {
-        id: { type: 'number' }
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
     },
     response: {
         200: {
@@ -62,33 +47,9 @@ export const getUserByIdSchema: FastifySchema = {
                 description: { type: 'string' }
             }
         },
-        400: {
-            description: 'Bad request',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        },
-        403: {
-            description: 'Forbidden',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        },
-        404: {
-            description: 'Not found',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        },
-        500: {
-            description: 'Internal server error',
-            type: 'object',
-            properties: {
-                message: { type: 'string' }
-            }
-        }
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
     }
 }
