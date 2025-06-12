@@ -112,3 +112,53 @@ export const userSeen = async (request: FastifyRequest<{ Params: { id: number } 
         client.release();
     }
 }
+
+export const modifyUser = async (request: FastifyRequest, reply: FastifyReply) => {
+    const token = request.headers.authorization;
+    const id = (request.params as { id: number }).id;
+    const { username, email, description } = request.body as { username?: string, email?: string, description?: string };
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!token) return reply.code(401).send({ message: 'You are not authorized to access this resource' });
+
+    if (!id) return reply.code(400).send({ message: 'Id is required' });
+
+    if (decoded.id !== id) return reply.code(403).send({ message: 'You are not authorized to modify this user' });
+
+    const client = await request.server.pg.connect();
+    try {
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (username !== undefined) {
+            updates.push(`username = $${paramCount}`);
+            values.push(username);
+            paramCount++;
+        }
+        if (email !== undefined) {
+            updates.push(`email = $${paramCount}`);
+            values.push(email);
+            paramCount++;
+        }
+        if (description !== undefined) {
+            updates.push(`description = $${paramCount}`);
+            values.push(description);
+            paramCount++;
+        }
+
+        if (updates.length === 0) {
+            return reply.code(400).send({ message: 'No fields to update' });
+        }
+
+        values.push(id);
+        const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+
+        const { rows } = await client.query(query, values);
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
