@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getUsers } from "../controllers/userControllers";
-import { getUsersSchema } from "../dtos/userDtos";
+import { getUserById, getUsers } from "../controllers/userControllers";
+import { getUserByIdSchema, getUsersSchema } from "../dtos/userDtos";
 import { authenticate } from "../middleware/auth";
 
 export default async function userRoutes(fastify: FastifyInstance) {
@@ -8,4 +8,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
         schema: getUsersSchema,
         preHandler: [authenticate]
     }, getUsers);
+    fastify.get('/:id', {
+        schema: getUserByIdSchema,
+    }, getUserById);
 }
