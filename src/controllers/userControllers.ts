@@ -57,19 +57,54 @@ export const userFavorites = async (request: FastifyRequest<{ Params: { id: numb
         }
         const { rows } = await client.query(
             `SELECT 
-            favorites.id AS favorite_id,
-            favorites.created_at AS favorited_at,
-            movies.id AS movie_id,
-            movies.title AS movie_title,
-            movies.cover_image AS movie_cover,
-            books.id AS book_id,
-            books.title AS book_title,
-            books.cover_image AS book_cover
+                favorites.id AS favorite_id,
+                favorites.created_at AS favorited_at,
+                movies.id AS movie_id,
+                movies.title AS movie_title,
+                movies.cover_image AS movie_cover,
+                books.id AS book_id,
+                books.title AS book_title,
+                books.cover_image AS book_cover
             FROM favorites
             LEFT JOIN movies ON favorites.movie_id = movies.id
             LEFT JOIN books ON favorites.book_id = books.id
             WHERE favorites.user_id = $1`,
             [id]);
+        return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+export const userSeen = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
+    const id = request.params.id;
+
+    if (!id) {
+        return reply.code(400).send({ message: 'Id is required' });
+    }
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows: user } = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (user.length === 0) {
+            return reply.code(404).send({ message: 'User not found' });
+        }
+        const { rows } = await client.query(
+            `SELECT 
+                seen.id AS seen_id,
+                seen.seen_at AS seen_at,
+                movies.id AS movie_id,
+                movies.title AS movie_title,
+                movies.cover_image AS movie_cover,
+                books.id AS book_id,
+                books.title AS book_title,
+                books.cover_image AS book_cover
+            FROM seen
+            LEFT JOIN movies ON seen.movie_id = movies.id
+            LEFT JOIN books ON seen.book_id = books.id
+            WHERE seen.user_id = $1`, [id]);
         return rows;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
