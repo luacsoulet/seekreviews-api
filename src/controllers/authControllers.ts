@@ -1,7 +1,44 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { RegisterDto } from "../dtos/authDtos";
+import { LoginDto, RegisterDto } from "../dtos/authDtos";
 import bcrypt from 'bcrypt';
 import { AuthenticatedUser } from "../middleware/auth";
+
+export const loginUser = async (request: FastifyRequest<{ Body: LoginDto }>, reply: FastifyReply) => {
+    const { email, password } = request.body;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        const user = rows[0];
+        if (!user) {
+            return reply.code(401).send({ message: 'Invalid credentials' });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+        if (!isValidPassword) {
+            return reply.code(401).send({ message: 'Invalid credentials' });
+        }
+
+        const token = await reply.jwtSign({
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            is_admin: user.is_admin,
+            description: user.description
+        }, {
+            expiresIn: '2h'
+        });
+
+        return { token, user: { id: user.id, email: user.email, username: user.username, is_admin: user.is_admin, description: user.description } };
+    } finally {
+        client.release();
+    }
+}
 
 export const registerUser = async (request: FastifyRequest<{ Body: RegisterDto }>, reply: FastifyReply) => {
     const { username, email, password } = request.body;
@@ -44,4 +81,13 @@ export const registerUser = async (request: FastifyRequest<{ Body: RegisterDto }
     } finally {
         client.release();
     }
+}
+
+export const verifyToken = async (request: FastifyRequest, reply: FastifyReply) => {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+        return reply.code(401).send({ message: 'Token authentication missing' });
+    }
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+    return { id: decoded.id, email: decoded.email, username: decoded.username, is_admin: decoded.is_admin };
 }
