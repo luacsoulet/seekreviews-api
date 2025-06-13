@@ -65,3 +65,37 @@ export const getMovieByIdSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const getMovieByTitleSchema: FastifySchema = {
+    description: 'Get a movie by title',
+    tags: ['Movies'],
+    querystring: {
+        type: 'object',
+        properties: {
+            title: { type: 'string' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Movies fetched successfully',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'number' },
+                    title: { type: 'string' },
+                    cover_image: { type: 'string' },
+                    description: { type: 'string' },
+                    release_date: { type: 'string' },
+                    rating: { type: 'number' },
+                    genre: { type: 'string' },
+                    created_at: { type: 'string' }
+                }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
