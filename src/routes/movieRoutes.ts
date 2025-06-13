@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getMovieById, getMovieByTitle, getMovies } from "../controllers/movieControllers";
-import { getMovieByIdSchema, getMovieByTitleSchema, getMoviesSchema } from "../dtos/movieDtos";
+import { getMovieByGenre, getMovieById, getMovieByTitle, getMovies } from "../controllers/movieControllers";
+import { getMovieByGenreSchema, getMovieByIdSchema, getMovieByTitleSchema, getMoviesSchema } from "../dtos/movieDtos";
 
 export const movieRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/', {
@@ -14,4 +14,8 @@ export const movieRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/search', {
         schema: getMovieByTitleSchema,
     }, getMovieByTitle);
+
+    fastify.get('/genre', {
+        schema: getMovieByGenreSchema,
+    }, getMovieByGenre);
 }
