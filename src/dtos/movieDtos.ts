@@ -218,3 +218,25 @@ export const modifyMovieSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const deleteMovieSchema: FastifySchema = {
+    description: 'Delete a movie',
+    tags: ['Movies'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        204: {
+            description: 'Movie deleted successfully'
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
