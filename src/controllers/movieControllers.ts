@@ -82,3 +82,65 @@ export const createMovie = async (request: FastifyRequest, reply: FastifyReply) 
         client.release();
     }
 }
+
+export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+    const { title, cover_image, description, director, release_date, genre } = request.body as { title: string | null, cover_image: string | null, description: string | null, director: string | null, release_date: string | null, genre: string | null };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (title !== null) {
+            updates.push(`title = $${paramCount}`);
+            values.push(title);
+            paramCount++;
+        }
+        if (cover_image !== null) {
+            updates.push(`cover_image = $${paramCount}`);
+            values.push(cover_image);
+            paramCount++;
+        }
+        if (description !== null) {
+            updates.push(`description = $${paramCount}`);
+            values.push(description);
+            paramCount++;
+        }
+        if (director !== null) {
+            updates.push(`director = $${paramCount}`);
+            values.push(director);
+            paramCount++;
+        }
+        if (release_date !== null) {
+            updates.push(`release_date = $${paramCount}`);
+            values.push(release_date);
+            paramCount++;
+        }
+        if (genre !== null) {
+            updates.push(`genre = $${paramCount}`);
+            values.push(genre);
+            paramCount++;
+        }
+
+        const updateString = updates.join(', ');
+
+        const { rows } = await client.query(`
+            UPDATE movies 
+            SET
+                ${updateString}
+            WHERE id = $8 
+            RETURNING *
+        `, [...values, id]);
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
