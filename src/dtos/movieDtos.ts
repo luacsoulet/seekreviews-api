@@ -34,3 +34,34 @@ export const getMoviesSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const getMovieByIdSchema: FastifySchema = {
+    description: 'Get a movie by id',
+    tags: ['Movies'],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Movie fetched successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                title: { type: 'string' },
+                cover_image: { type: 'string' },
+                description: { type: 'string' },
+                release_date: { type: 'string' },
+                rating: { type: 'number' },
+                genre: { type: 'string' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
