@@ -30,3 +30,17 @@ export const getMovieById = async (request: FastifyRequest<{ Params: { id: numbe
         client.release();
     }
 }
+
+export const getMovieByTitle = async (request: FastifyRequest<{ Querystring: { title: string } }>, reply: FastifyReply) => {
+    const title = request.query.title;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM movies WHERE title ILIKE $1', [`%${title}%`]);
+        return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
