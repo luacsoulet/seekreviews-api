@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { createMovie, getMovieByGenre, getMovieById, getMovieByTitle, getMovies } from "../controllers/movieControllers";
-import { createMovieSchema, getMovieByGenreSchema, getMovieByIdSchema, getMovieByTitleSchema, getMoviesSchema } from "../dtos/movieDtos";
+import { createMovie, getMovieByGenre, getMovieById, getMovieByTitle, getMovies, modifyMovie } from "../controllers/movieControllers";
+import { createMovieSchema, getMovieByGenreSchema, getMovieByIdSchema, getMovieByTitleSchema, getMoviesSchema, modifyMovieSchema } from "../dtos/movieDtos";
 import { authenticate } from "../middleware/auth";
 
 export const movieRoutes = async (fastify: FastifyInstance) => {
@@ -24,4 +24,9 @@ export const movieRoutes = async (fastify: FastifyInstance) => {
         schema: createMovieSchema,
         preHandler: [authenticate]
     }, createMovie);
+
+    fastify.patch('/:id', {
+        schema: modifyMovieSchema,
+        preHandler: [authenticate]
+    }, modifyMovie);
 }
