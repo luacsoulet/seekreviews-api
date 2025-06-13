@@ -144,3 +144,21 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
         client.release();
     }
 }
+
+export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = request.params as { id: number }
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        await client.query('DELETE FROM movies WHERE id = $1', [id]);
+        return reply.code(204).send({ message: 'Movie deleted successfully' });
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
