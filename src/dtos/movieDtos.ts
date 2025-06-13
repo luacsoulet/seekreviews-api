@@ -4,6 +4,12 @@ import { error400, error401, error403, error404, error500 } from "../utils/error
 export const getMoviesSchema: FastifySchema = {
     description: 'Get all movies',
     tags: ['Movies'],
+    querystring: {
+        type: 'object',
+        properties: {
+            page: { type: 'number', default: 1 }
+        }
+    },
     response: {
         200: {
             description: 'Movies fetched successfully',
