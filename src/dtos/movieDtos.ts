@@ -167,6 +167,52 @@ export const createMovieSchema: FastifySchema = {
             }
         },
         400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
+
+export const modifyMovieSchema: FastifySchema = {
+    description: 'Modify a movie',
+    tags: ['Movies'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            title: { type: 'string', nullable: true },
+            cover_image: { type: 'string', nullable: true },
+            description: { type: 'string', nullable: true },
+            director: { type: 'string', nullable: true },
+            release_date: { type: 'string', nullable: true },
+            genre: { type: 'string', nullable: true }
+        }
+    },
+    response: {
+        200: {
+            description: 'Movie modified successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                title: { type: 'string' },
+                cover_image: { type: 'string' },
+                description: { type: 'string' },
+                release_date: { type: 'string' },
+                director: { type: 'string' },
+                avg_rating: { type: 'number' },
+                genre: { type: 'string' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
         403: error403,
         404: error404,
         500: error500
