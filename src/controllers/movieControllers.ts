@@ -44,3 +44,20 @@ export const getMovieByTitle = async (request: FastifyRequest<{ Querystring: { t
         client.release();
     }
 }
+
+export const getMovieByGenre = async (request: FastifyRequest<{ Querystring: { genre: string, page: number } }>, reply: FastifyReply) => {
+    const page = request.query.page || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+    const genre = request.query.genre;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM movies WHERE genre = $1 LIMIT $2 OFFSET $3', [genre, limit, offset]);
+        return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
