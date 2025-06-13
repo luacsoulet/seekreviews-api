@@ -1,9 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
-export const getMovies = async (request: FastifyRequest, reply: FastifyReply) => {
+export const getMovies = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
+    const page = request.query.page || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT * FROM movies');
+        const { rows } = await client.query('SELECT * FROM movies LIMIT $1 OFFSET $2', [limit, offset]);
         return rows;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
