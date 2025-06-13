@@ -134,3 +134,41 @@ export const getMovieByGenreSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const createMovieSchema: FastifySchema = {
+    description: 'Create a movie',
+    tags: ['Movies'],
+    security: [{ bearerAuth: [] }],
+    body: {
+        type: 'object',
+        properties: {
+            title: { type: 'string' },
+            cover_image: { type: 'string' },
+            description: { type: 'string' },
+            director: { type: 'string' },
+            release_date: { type: 'string' },
+            genre: { type: 'string' }
+        }
+    },
+    response: {
+        201: {
+            description: 'Movie created successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                title: { type: 'string' },
+                cover_image: { type: 'string' },
+                description: { type: 'string' },
+                release_date: { type: 'string' },
+                director: { type: 'string' },
+                avg_rating: { type: 'number' },
+                genre: { type: 'string' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
