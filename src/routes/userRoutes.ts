@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getUserById, getUsers, modifyUser, userFavorites, userSeen } from "../controllers/userControllers";
-import { getUserByIdSchema, getUsersSchema, modifyUserSchema, userFavoritesSchema, userSeenSchema } from "../dtos/userDtos";
+import { deleteUser, getUserById, getUsers, modifyUser, userFavorites, userSeen } from "../controllers/userControllers";
+import { deleteUserSchema, getUserByIdSchema, getUsersSchema, modifyUserSchema, userFavoritesSchema, userSeenSchema } from "../dtos/userDtos";
 import { authenticate } from "../middleware/auth";
 
 export default async function userRoutes(fastify: FastifyInstance) {
@@ -21,4 +21,8 @@ export default async function userRoutes(fastify: FastifyInstance) {
         schema: modifyUserSchema,
         preHandler: [authenticate]
     }, modifyUser);
+    fastify.delete('/:id', {
+        schema: deleteUserSchema,
+        preHandler: [authenticate]
+    }, deleteUser);
 }
