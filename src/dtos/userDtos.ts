@@ -157,3 +157,24 @@ export const modifyUserSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const deleteUserSchema: FastifySchema = {
+    description: 'Delete a user',
+    tags: ['Users'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        204: {
+            description: 'User deleted successfully'
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
