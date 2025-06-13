@@ -15,3 +15,18 @@ export const getMovies = async (request: FastifyRequest<{ Querystring: { page: n
         client.release();
     }
 }
+
+export const getMovieById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
+    const id = request.params.id;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM movies WHERE id = $1', [id]);
+        if (rows.length === 0) return reply.code(404).send({ message: 'Movie not found' });
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
