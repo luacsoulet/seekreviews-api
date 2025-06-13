@@ -162,3 +162,25 @@ export const modifyUser = async (request: FastifyRequest, reply: FastifyReply) =
         client.release();
     }
 }
+
+export const deleteUser = async (request: FastifyRequest, reply: FastifyReply) => {
+    const token = request.headers.authorization;
+    const id = (request.params as { id: number }).id;
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!token) return reply.code(401).send({ message: 'You are not authorized to access this resource' });
+
+    if (!id) return reply.code(400).send({ message: 'Id is required' });
+
+    if (!decoded.is_admin && decoded.id !== id) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        await client.query('DELETE FROM users WHERE id = $1', [id]);
+        return reply.code(204).send({ message: 'User deleted successfully' });
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
