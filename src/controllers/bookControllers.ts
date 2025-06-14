@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { AuthenticatedUser } from "../middleware/auth";
 
 export const getBooks = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
@@ -63,6 +64,24 @@ export const getBookByGenre = async (request: FastifyRequest<{ Querystring: { ge
             return reply.code(404).send({ message: 'No books found for this genre' });
         }
         return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+export const createBook = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string, description: string, author: string, genre: string, cover_image: string, publish_date: string };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('INSERT INTO books (title, description, author, genre, cover_image, publish_date, avg_rating) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, description, author, genre, cover_image, publish_date, 0]);
+        return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
