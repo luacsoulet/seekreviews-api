@@ -73,3 +73,28 @@ export const modifyComment = async (request: FastifyRequest, reply: FastifyReply
         client.release();
     }
 }
+
+export const deleteComment = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    const client = await request.server.pg.connect();
+
+    const { rows } = await client.query('SELECT * FROM comments WHERE id = $1', [id]);
+    if (rows.length === 0) {
+        return reply.code(404).send({ message: 'Comment not found' });
+    }
+
+    if (rows[0].user_id !== decoded.id) {
+        return reply.code(403).send({ message: 'You are not the owner of this comment' });
+    }
+
+    try {
+        await client.query('DELETE FROM comments WHERE id = $1 AND user_id = $2', [id, decoded.id]);
+        return reply.code(204).send();
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+    }
+}
