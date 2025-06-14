@@ -32,3 +32,20 @@ export const getBookById = async (request: FastifyRequest, reply: FastifyReply) 
         client.release();
     }
 }
+
+export const getBookByTitle = async (request: FastifyRequest<{ Querystring: { title: string } }>, reply: FastifyReply) => {
+    const { title } = request.query;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM books WHERE title ILIKE $1', [`%${title}%`]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'No books found' });
+        }
+        return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
