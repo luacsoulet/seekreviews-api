@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getBookById, getBookByTitle, getBooks } from "../controllers/bookControllers";
-import { getBookByIdSchema, getBookByTitleSchema, getBooksSchema } from "../dtos/bookDtos";
+import { getBookById, getBookByGenre, getBookByTitle, getBooks } from "../controllers/bookControllers";
+import { getBookByIdSchema, getBookByGenreSchema, getBookByTitleSchema, getBooksSchema } from "../dtos/bookDtos";
 
 export const bookRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/', {
@@ -14,4 +14,8 @@ export const bookRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/search', {
         schema: getBookByTitleSchema,
     }, getBookByTitle);
+
+    fastify.get('/genre', {
+        schema: getBookByGenreSchema,
+    }, getBookByGenre);
 }
