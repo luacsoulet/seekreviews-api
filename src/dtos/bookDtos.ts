@@ -177,3 +177,42 @@ export const createBookSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const modifyBookSchema: FastifySchema = {
+    description: 'Modify a book',
+    tags: ['Books'],
+    security: [{ bearerAuth: [] }],
+    body: {
+        type: 'object',
+        properties: {
+            title: { type: 'string', nullable: true },
+            description: { type: 'string', nullable: true },
+            author: { type: 'string', nullable: true },
+            genre: { type: 'string', nullable: true },
+            cover_image: { type: 'string', nullable: true },
+            publish_date: { type: 'string', nullable: true }
+        }
+    },
+    response: {
+        200: {
+            description: 'Book modified successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                title: { type: 'string' },
+                description: { type: 'string' },
+                author: { type: 'string' },
+                genre: { type: 'string' },
+                cover_image: { type: 'string' },
+                publish_date: { type: 'string' },
+                avg_rating: { type: 'number' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
