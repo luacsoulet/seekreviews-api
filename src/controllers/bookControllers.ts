@@ -1,14 +1,14 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthenticatedUser } from "../middleware/auth";
 
-export const getMovies = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
+export const getBooks = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT * FROM movies LIMIT $1 OFFSET $2', [limit, offset]);
+        const { rows } = await client.query('SELECT * FROM books LIMIT $1 OFFSET $2', [limit, offset]);
         return rows;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -17,13 +17,15 @@ export const getMovies = async (request: FastifyRequest<{ Querystring: { page: n
     }
 }
 
-export const getMovieById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
-    const id = request.params.id;
+export const getBookById = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = request.params as { id: number };
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT * FROM movies WHERE id = $1', [id]);
-        if (rows.length === 0) return reply.code(404).send({ message: 'Movie not found' });
+        const { rows } = await client.query('SELECT * FROM books WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Book not found' });
+        }
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -32,12 +34,15 @@ export const getMovieById = async (request: FastifyRequest<{ Params: { id: numbe
     }
 }
 
-export const getMovieByTitle = async (request: FastifyRequest<{ Querystring: { title: string } }>, reply: FastifyReply) => {
-    const title = request.query.title;
+export const getBookByTitle = async (request: FastifyRequest<{ Querystring: { title: string } }>, reply: FastifyReply) => {
+    const { title } = request.query;
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT * FROM movies WHERE title ILIKE $1', [`%${title}%`]);
+        const { rows } = await client.query('SELECT * FROM books WHERE title ILIKE $1', [`%${title}%`]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'No books found' });
+        }
         return rows;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -46,15 +51,18 @@ export const getMovieByTitle = async (request: FastifyRequest<{ Querystring: { t
     }
 }
 
-export const getMovieByGenre = async (request: FastifyRequest<{ Querystring: { genre: string, page: number } }>, reply: FastifyReply) => {
+export const getBookByGenre = async (request: FastifyRequest<{ Querystring: { genre: string, page: number } }>, reply: FastifyReply) => {
+    const { genre } = request.query;
     const page = request.query.page || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
-    const genre = request.query.genre;
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT * FROM movies WHERE genre = $1 LIMIT $2 OFFSET $3', [genre, limit, offset]);
+        const { rows } = await client.query('SELECT * FROM books WHERE genre = $1 LIMIT $2 OFFSET $3', [genre, limit, offset]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'No books found for this genre' });
+        }
         return rows;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -63,18 +71,16 @@ export const getMovieByGenre = async (request: FastifyRequest<{ Querystring: { g
     }
 }
 
-export const createMovie = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { title, cover_image, description, director, release_date, genre } = request.body as { title: string, cover_image: string, description: string, director: string, release_date: string, genre: string };
+export const createBook = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string, description: string, author: string, genre: string, cover_image: string, publish_date: string };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
 
-    console.log(title, cover_image, description, director, release_date, genre);
-
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('INSERT INTO movies (title, cover_image, description, director, release_date, avg_rating, genre) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, cover_image, description, director, release_date, 0, genre]);
+        const { rows } = await client.query('INSERT INTO books (title, description, author, genre, cover_image, publish_date, avg_rating) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, description, author, genre, cover_image, publish_date, 0]);
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -83,9 +89,9 @@ export const createMovie = async (request: FastifyRequest, reply: FastifyReply) 
     }
 }
 
-export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) => {
+export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: number };
-    const { title, cover_image, description, director, release_date, genre } = request.body as { title: string | null, cover_image: string | null, description: string | null, director: string | null, release_date: string | null, genre: string | null };
+    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string | null, description: string | null, author: string | null, genre: string | null, cover_image: string | null, publish_date: string | null };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
@@ -102,29 +108,34 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
             values.push(title);
             paramCount++;
         }
-        if (cover_image !== null) {
-            updates.push(`cover_image = $${paramCount}`);
-            values.push(cover_image);
-            paramCount++;
-        }
+
         if (description !== null) {
             updates.push(`description = $${paramCount}`);
             values.push(description);
             paramCount++;
         }
-        if (director !== null) {
-            updates.push(`director = $${paramCount}`);
-            values.push(director);
+
+        if (author !== null) {
+            updates.push(`author = $${paramCount}`);
+            values.push(author);
             paramCount++;
         }
-        if (release_date !== null) {
-            updates.push(`release_date = $${paramCount}`);
-            values.push(release_date);
-            paramCount++;
-        }
+
         if (genre !== null) {
             updates.push(`genre = $${paramCount}`);
             values.push(genre);
+            paramCount++;
+        }
+
+        if (cover_image !== null) {
+            updates.push(`cover_image = $${paramCount}`);
+            values.push(cover_image);
+            paramCount++;
+        }
+
+        if (publish_date !== null) {
+            updates.push(`publish_date = $${paramCount}`);
+            values.push(publish_date);
             paramCount++;
         }
 
@@ -135,10 +146,10 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
         const updateString = updates.join(', ');
 
         const { rows } = await client.query(`
-            UPDATE movies 
+            UPDATE books 
             SET
                 ${updateString}
-            WHERE id = $8 
+            WHERE id = $${paramCount}
             RETURNING *
         `, [...values, id]);
         return rows[0];
@@ -149,8 +160,8 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
     }
 }
 
-export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) => {
-    const id = request.params as { id: number }
+export const deleteBook = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
@@ -158,12 +169,12 @@ export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) 
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('SELECT id FROM movies WHERE id = $1', [id]);
+        const { rows } = await client.query('SELECT id FROM books WHERE id = $1', [id]);
         if (rows.length === 0) {
-            return reply.code(404).send({ message: 'Movie not found' });
+            return reply.code(404).send({ message: 'Book not found' });
         }
-        await client.query('DELETE FROM movies WHERE id = $1', [id]);
-        return reply.code(204).send({ message: 'Movie deleted successfully' });
+        await client.query('DELETE FROM books WHERE id = $1', [id]);
+        return reply.code(204).send({ message: 'Book deleted successfully' });
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
