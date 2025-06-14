@@ -9,6 +9,7 @@ import { config } from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import { movieRoutes } from './routes/movieRoutes';
+import { bookRoutes } from './routes/bookRoutes';
 
 config();
 
@@ -100,6 +101,7 @@ app.register(jwt, {
 app.register(authRoutes, { prefix: '/api/v1/auth' });
 app.register(userRoutes, { prefix: '/api/v1/users' });
 app.register(movieRoutes, { prefix: '/api/v1/movies' });
+app.register(bookRoutes, { prefix: '/api/v1/books' });
 
 app.get('/api/v1/ping', async () => {
     return { status: 'ok' };
