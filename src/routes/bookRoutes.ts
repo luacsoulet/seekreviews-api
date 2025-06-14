@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getBookById, getBookByGenre, getBookByTitle, getBooks, createBook, modifyBook } from "../controllers/bookControllers";
-import { getBookByIdSchema, getBookByGenreSchema, getBookByTitleSchema, getBooksSchema, createBookSchema, modifyBookSchema } from "../dtos/bookDtos";
+import { getBookById, getBookByGenre, getBookByTitle, getBooks, createBook, modifyBook, deleteBook } from "../controllers/bookControllers";
+import { getBookByIdSchema, getBookByGenreSchema, getBookByTitleSchema, getBooksSchema, createBookSchema, modifyBookSchema, deleteBookSchema } from "../dtos/bookDtos";
 import { authenticate } from "../middleware/auth";
 
 export const bookRoutes = async (fastify: FastifyInstance) => {
@@ -29,4 +29,9 @@ export const bookRoutes = async (fastify: FastifyInstance) => {
         schema: modifyBookSchema,
         preHandler: [authenticate]
     }, modifyBook);
+
+    fastify.delete('/:id', {
+        schema: deleteBookSchema,
+        preHandler: [authenticate]
+    }, deleteBook);
 }
