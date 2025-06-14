@@ -49,3 +49,23 @@ export const getBookByTitle = async (request: FastifyRequest<{ Querystring: { ti
         client.release();
     }
 }
+
+export const getBookByGenre = async (request: FastifyRequest<{ Querystring: { genre: string, page: number } }>, reply: FastifyReply) => {
+    const { genre } = request.query;
+    const page = request.query.page || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM books WHERE genre = $1 LIMIT $2 OFFSET $3', [genre, limit, offset]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'No books found for this genre' });
+        }
+        return rows;
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
