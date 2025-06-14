@@ -128,6 +128,10 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
             paramCount++;
         }
 
+        if (updates.length === 0) {
+            return reply.code(400).send({ message: 'No fields to update' });
+        }
+
         const updateString = updates.join(', ');
 
         const { rows } = await client.query(`

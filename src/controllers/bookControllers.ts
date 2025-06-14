@@ -88,3 +88,74 @@ export const createBook = async (request: FastifyRequest, reply: FastifyReply) =
         client.release();
     }
 }
+
+export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string | null, description: string | null, author: string | null, genre: string | null, cover_image: string | null, publish_date: string | null };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (title !== null) {
+            updates.push(`title = $${paramCount}`);
+            values.push(title);
+            paramCount++;
+        }
+
+        if (description !== null) {
+            updates.push(`description = $${paramCount}`);
+            values.push(description);
+            paramCount++;
+        }
+
+        if (author !== null) {
+            updates.push(`author = $${paramCount}`);
+            values.push(author);
+            paramCount++;
+        }
+
+        if (genre !== null) {
+            updates.push(`genre = $${paramCount}`);
+            values.push(genre);
+            paramCount++;
+        }
+
+        if (cover_image !== null) {
+            updates.push(`cover_image = $${paramCount}`);
+            values.push(cover_image);
+            paramCount++;
+        }
+
+        if (publish_date !== null) {
+            updates.push(`publish_date = $${paramCount}`);
+            values.push(publish_date);
+            paramCount++;
+        }
+
+        if (updates.length === 0) {
+            return reply.code(400).send({ message: 'No fields to update' });
+        }
+
+        const updateString = updates.join(', ');
+
+        const { rows } = await client.query(`
+            UPDATE books 
+            SET
+                ${updateString}
+            WHERE id = $${paramCount}
+            RETURNING *
+        `, [...values, id]);
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
