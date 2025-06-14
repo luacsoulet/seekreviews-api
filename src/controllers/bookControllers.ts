@@ -15,3 +15,20 @@ export const getBooks = async (request: FastifyRequest<{ Querystring: { page: nu
         client.release();
     }
 }
+
+export const getBookById = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = request.params as { id: number };
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM books WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Book not found' });
+        }
+        return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
