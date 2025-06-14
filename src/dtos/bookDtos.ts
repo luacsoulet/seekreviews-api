@@ -216,3 +216,25 @@ export const modifyBookSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const deleteBookSchema: FastifySchema = {
+    description: 'Delete a book',
+    tags: ['Books'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        204: {
+            description: 'Book deleted successfully'
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
