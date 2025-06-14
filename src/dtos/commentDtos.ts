@@ -74,7 +74,7 @@ export const createCommentSchema: FastifySchema = {
         properties: {
             movie_id: { type: 'number', nullable: true },
             book_id: { type: 'number', nullable: true },
-            comment: { type: 'string' },
+            message: { type: 'string' },
         }
     },
     response: {
@@ -86,7 +86,44 @@ export const createCommentSchema: FastifySchema = {
                 movie_id: { type: 'number', nullable: true },
                 book_id: { type: 'number', nullable: true },
                 user_id: { type: 'number' },
-                comment: { type: 'string' },
+                message: { type: 'string' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
+
+export const modifyCommentSchema: FastifySchema = {
+    description: 'Modify a comment',
+    tags: ['Comments'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            message: { type: 'string' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Comment modified successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                movie_id: { type: 'number', nullable: true },
+                book_id: { type: 'number', nullable: true },
+                user_id: { type: 'number' },
+                message: { type: 'string' },
                 created_at: { type: 'string' }
             }
         },
