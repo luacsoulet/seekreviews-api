@@ -159,3 +159,25 @@ export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) =
         client.release();
     }
 }
+
+export const deleteBook = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT id FROM books WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Book not found' });
+        }
+        await client.query('DELETE FROM books WHERE id = $1', [id]);
+        return reply.code(204).send({ message: 'Book deleted successfully' });
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}

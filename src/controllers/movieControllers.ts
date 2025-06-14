@@ -158,6 +158,10 @@ export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) 
 
     const client = await request.server.pg.connect();
     try {
+        const { rows } = await client.query('SELECT id FROM movies WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Movie not found' });
+        }
         await client.query('DELETE FROM movies WHERE id = $1', [id]);
         return reply.code(204).send({ message: 'Movie deleted successfully' });
     } catch (error) {
