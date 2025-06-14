@@ -29,7 +29,7 @@ export const getBookComments = async (request: FastifyRequest<{ Querystring: { b
 }
 
 export const createComment = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { movie_id, book_id, comment } = request.body as { movie_id: number | null, book_id: number | null, comment: string };
+    const { movie_id, book_id, message } = request.body as { movie_id: number | null, book_id: number | null, message: string };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
@@ -39,8 +39,34 @@ export const createComment = async (request: FastifyRequest, reply: FastifyReply
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('INSERT INTO comments (movie_id, book_id, user_id, comment) VALUES ($1, $2, $3, $4) RETURNING *', [movie_id, book_id, decoded.id, comment]);
+        const { rows } = await client.query('INSERT INTO comments (movie_id, book_id, user_id, message) VALUES ($1, $2, $3, $4) RETURNING *', [movie_id, book_id, decoded.id, message]);
         return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+export const modifyComment = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+    const { message } = request.body as { message: string };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows } = await client.query('SELECT * FROM comments WHERE id = $1', [id]);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Comment not found' });
+        }
+
+        if (rows[0].user_id !== decoded.id) {
+            return reply.code(403).send({ message: 'You are not the owner of this comment' });
+        }
+
+        const { rows: updatedRows } = await client.query('UPDATE comments SET message = $1 WHERE id = $2 AND user_id = $3 RETURNING *', [message, id, decoded.id]);
+        return updatedRows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
