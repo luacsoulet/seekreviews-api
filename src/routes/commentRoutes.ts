@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { createComment, getBookComments, getMovieComments, modifyComment } from "../controllers/commentControllers";
-import { createCommentSchema, getBookCommentsSchema, getMovieCommentsSchema, modifyCommentSchema } from "../dtos/commentDtos";
+import { createComment, deleteComment, getBookComments, getMovieComments, modifyComment } from "../controllers/commentControllers";
+import { createCommentSchema, deleteCommentSchema, getBookCommentsSchema, getMovieCommentsSchema, modifyCommentSchema } from "../dtos/commentDtos";
 import { authenticate } from "../middleware/auth";
 
 export const commentRoutes = async (fastify: FastifyInstance) => {
@@ -21,4 +21,9 @@ export const commentRoutes = async (fastify: FastifyInstance) => {
         schema: modifyCommentSchema,
         preHandler: [authenticate]
     }, modifyComment);
+
+    fastify.delete('/:id', {
+        schema: deleteCommentSchema,
+        preHandler: [authenticate]
+    }, deleteComment);
 }
