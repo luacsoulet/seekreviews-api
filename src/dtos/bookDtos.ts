@@ -1,5 +1,5 @@
 import { FastifySchema } from "fastify";
-import { error400, error403, error404, error500 } from "../utils/errorTypes";
+import { error400, error401, error403, error404, error500 } from "../utils/errorTypes";
 
 export const getBooksSchema: FastifySchema = {
     description: 'Get all books',
@@ -133,6 +133,45 @@ export const getBookByGenreSchema: FastifySchema = {
             }
         },
         400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
+
+export const createBookSchema: FastifySchema = {
+    description: 'Create a book',
+    tags: ['Books'],
+    security: [{ bearerAuth: [] }],
+    body: {
+        type: 'object',
+        properties: {
+            title: { type: 'string' },
+            description: { type: 'string' },
+            author: { type: 'string' },
+            genre: { type: 'string' },
+            cover_image: { type: 'string' },
+            publish_date: { type: 'string' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Book created successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                title: { type: 'string' },
+                description: { type: 'string' },
+                author: { type: 'string' },
+                genre: { type: 'string' },
+                cover_image: { type: 'string' },
+                publish_date: { type: 'string' },
+                avg_rating: { type: 'number' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
         403: error403,
         404: error404,
         500: error500
