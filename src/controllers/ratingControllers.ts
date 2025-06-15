@@ -113,3 +113,27 @@ export const modifyRating = async (request: FastifyRequest, reply: FastifyReply)
         client.release();
     }
 }
+
+export const deleteRating = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows: existingRatingRows } = await client.query('SELECT * FROM ratings WHERE id = $1 AND user_id = $2', [id, decoded.id]);
+        if (existingRatingRows.length === 0) {
+            return reply.code(404).send({ message: 'Rating not found' });
+        }
+        if (existingRatingRows[0].user_id !== decoded.id) {
+            return reply.code(403).send({ message: 'You are not the owner of this rating' });
+        }
+
+        await client.query('DELETE FROM ratings WHERE id = $1 AND user_id = $2', [id, decoded.id]);
+        return reply.code(204).send();
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
