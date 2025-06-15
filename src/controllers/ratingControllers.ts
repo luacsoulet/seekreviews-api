@@ -80,6 +80,9 @@ export const createRating = async (request: FastifyRequest, reply: FastifyReply)
         }
 
         const { rows } = await client.query('INSERT INTO ratings (movie_id, book_id, user_id, rating) VALUES ($1, $2, $3, $4) RETURNING *', [movie_id, book_id, decoded.id, rating]);
+
+        await updateAverageRating(client, movie_id, book_id);
+
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -106,6 +109,8 @@ export const modifyRating = async (request: FastifyRequest, reply: FastifyReply)
 
         const { rows: updatedRatingRows } = await client.query('UPDATE ratings SET rating = $1 WHERE id = $2 AND user_id = $3 RETURNING *', [rating, id, decoded.id]);
 
+        await updateAverageRating(client, updatedRatingRows[0].movie_id, updatedRatingRows[0].book_id);
+
         return updatedRatingRows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -129,11 +134,52 @@ export const deleteRating = async (request: FastifyRequest, reply: FastifyReply)
             return reply.code(403).send({ message: 'You are not the owner of this rating' });
         }
 
+        const movie_id = existingRatingRows[0].movie_id;
+        const book_id = existingRatingRows[0].book_id;
+
         await client.query('DELETE FROM ratings WHERE id = $1 AND user_id = $2', [id, decoded.id]);
+
+        await updateAverageRating(client, movie_id, book_id);
+
         return reply.code(204).send();
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
         client.release();
+    }
+}
+
+export const updateAverageRating = async (client: any, movie_id: number | null, book_id: number | null) => {
+    try {
+        if (movie_id !== null) {
+            const { rows } = await client.query(`
+                WITH avg_rating AS (
+                    SELECT COALESCE(AVG(rating), 0) as new_avg
+                    FROM ratings
+                    WHERE movie_id = $1 AND book_id IS NULL
+                )
+                UPDATE movies
+                SET avg_rating = (SELECT new_avg FROM avg_rating)
+                WHERE id = $1
+                RETURNING avg_rating
+            `, [movie_id]);
+            return rows[0].avg_rating;
+        } else if (book_id !== null) {
+            const { rows } = await client.query(`
+                WITH avg_rating AS (
+                    SELECT COALESCE(AVG(rating), 0) as new_avg
+                    FROM ratings
+                    WHERE book_id = $1 AND movie_id IS NULL
+                )
+                UPDATE books
+                SET avg_rating = (SELECT new_avg FROM avg_rating)
+                WHERE id = $1
+                RETURNING avg_rating
+            `, [book_id]);
+            return rows[0].avg_rating;
+        }
+    } catch (error) {
+        console.error('Error updating average rating:', error);
+        throw error;
     }
 }
