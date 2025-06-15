@@ -167,3 +167,25 @@ export const modifyRatingSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const deleteRatingSchema: FastifySchema = {
+    description: 'Delete a rating',
+    tags: ['Ratings'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    response: {
+        204: {
+            description: 'Rating deleted successfully'
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
