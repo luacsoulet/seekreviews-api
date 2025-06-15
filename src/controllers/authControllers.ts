@@ -34,7 +34,7 @@ export const loginUser = async (request: FastifyRequest<{ Body: LoginDto }>, rep
             expiresIn: '2h'
         });
 
-        return { token, user: { id: user.id, email: user.email, username: user.username, is_admin: user.is_admin, description: user.description } };
+        return reply.code(200).send({ token, user: { id: user.id, email: user.email, username: user.username, is_admin: user.is_admin, description: user.description } });
     } finally {
         client.release();
     }
@@ -77,7 +77,7 @@ export const registerUser = async (request: FastifyRequest<{ Body: RegisterDto }
             [username, email, hashedPassword, false, new Date(), null]
         );
 
-        return { id: rows[0].id, username: rows[0].username, email: rows[0].email, description: rows[0].description };
+        return reply.code(201).send({ id: rows[0].id, username: rows[0].username, email: rows[0].email, description: rows[0].description });
     } finally {
         client.release();
     }
@@ -89,5 +89,5 @@ export const verifyToken = async (request: FastifyRequest, reply: FastifyReply) 
         return reply.code(401).send({ message: 'Token authentication missing' });
     }
     const decoded = await request.jwtVerify<AuthenticatedUser>();
-    return { id: decoded.id, email: decoded.email, username: decoded.username, is_admin: decoded.is_admin };
+    return reply.code(200).send({ id: decoded.id, email: decoded.email, username: decoded.username, is_admin: decoded.is_admin });
 }
