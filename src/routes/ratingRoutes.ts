@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { createRating, getBookRatings, getMovieRatings, getUserRatings } from "../controllers/ratingControllers";
-import { createRatingSchema, getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema } from "../dtos/ratingDtos";
+import { createRating, getBookRatings, getMovieRatings, getUserRatings, modifyRating } from "../controllers/ratingControllers";
+import { createRatingSchema, getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema, modifyRatingSchema } from "../dtos/ratingDtos";
+import { authenticate } from "../middleware/auth";
 
 export const ratingRoutes = (fastify: FastifyInstance) => {
     fastify.get('/movie', {
@@ -17,5 +18,11 @@ export const ratingRoutes = (fastify: FastifyInstance) => {
 
     fastify.post('/', {
         schema: createRatingSchema,
+        preHandler: [authenticate]
     }, createRating);
+
+    fastify.patch('/:id', {
+        schema: modifyRatingSchema,
+        preHandler: [authenticate]
+    }, modifyRating);
 }
