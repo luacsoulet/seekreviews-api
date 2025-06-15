@@ -101,6 +101,7 @@ export const getUserRatingsSchema: FastifySchema = {
 export const createRatingSchema: FastifySchema = {
     description: 'Create a rating',
     tags: ['Ratings'],
+    security: [{ bearerAuth: [] }],
     body: {
         type: 'object',
         properties: {
@@ -112,6 +113,43 @@ export const createRatingSchema: FastifySchema = {
     response: {
         200: {
             description: 'Rating created successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                movie_id: { type: 'number', nullable: true },
+                book_id: { type: 'number', nullable: true },
+                user_id: { type: 'number' },
+                rating: { type: 'number' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
+
+export const modifyRatingSchema: FastifySchema = {
+    description: 'Modify a rating',
+    tags: ['Ratings'],
+    security: [{ bearerAuth: [] }],
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'number' }
+        }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            rating: { type: 'number' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Rating modified successfully',
             type: 'object',
             properties: {
                 id: { type: 'number' },
