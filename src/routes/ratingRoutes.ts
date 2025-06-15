@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getBookRatings, getMovieRatings, getUserRatings } from "../controllers/ratingControllers";
-import { getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema } from "../dtos/ratingDtos";
+import { createRating, getBookRatings, getMovieRatings, getUserRatings } from "../controllers/ratingControllers";
+import { createRatingSchema, getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema } from "../dtos/ratingDtos";
 
 export const ratingRoutes = (fastify: FastifyInstance) => {
     fastify.get('/movie', {
@@ -14,4 +14,8 @@ export const ratingRoutes = (fastify: FastifyInstance) => {
     fastify.get('/user', {
         schema: getUserRatingsSchema,
     }, getUserRatings);
+
+    fastify.post('/', {
+        schema: createRatingSchema,
+    }, createRating);
 }
