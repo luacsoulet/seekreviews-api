@@ -97,3 +97,35 @@ export const getUserRatingsSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const createRatingSchema: FastifySchema = {
+    description: 'Create a rating',
+    tags: ['Ratings'],
+    body: {
+        type: 'object',
+        properties: {
+            movie_id: { type: 'number', nullable: true },
+            book_id: { type: 'number', nullable: true },
+            rating: { type: 'number' },
+        }
+    },
+    response: {
+        200: {
+            description: 'Rating created successfully',
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                movie_id: { type: 'number', nullable: true },
+                book_id: { type: 'number', nullable: true },
+                user_id: { type: 'number' },
+                rating: { type: 'number' },
+                created_at: { type: 'string' }
+            }
+        },
+        400: error400,
+        401: error401,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
