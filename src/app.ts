@@ -11,6 +11,7 @@ import userRoutes from './routes/userRoutes';
 import { movieRoutes } from './routes/movieRoutes';
 import { bookRoutes } from './routes/bookRoutes';
 import { commentRoutes } from './routes/commentRoutes';
+import { ratingRoutes } from './routes/ratingRoutes';
 
 config();
 
@@ -104,6 +105,7 @@ app.register(userRoutes, { prefix: '/api/v1/users' });
 app.register(movieRoutes, { prefix: '/api/v1/movies' });
 app.register(bookRoutes, { prefix: '/api/v1/books' });
 app.register(commentRoutes, { prefix: '/api/v1/comments' });
+app.register(ratingRoutes, { prefix: '/api/v1/ratings' });
 
 app.get('/api/v1/ping', async () => {
     return { status: 'ok' };
