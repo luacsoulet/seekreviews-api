@@ -64,3 +64,36 @@ export const getBookRatingsSchema: FastifySchema = {
         500: error500
     }
 }
+
+export const getUserRatingsSchema: FastifySchema = {
+    description: 'Get ratings for a user',
+    tags: ['Ratings'],
+    querystring: {
+        type: 'object',
+        properties: {
+            user_id: { type: 'number' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Ratings retrieved successfully',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'number' },
+                    title: { type: 'string' },
+                    movie_id: { type: 'number', nullable: true },
+                    book_id: { type: 'number', nullable: true },
+                    user_id: { type: 'number' },
+                    rating: { type: 'number' },
+                    created_at: { type: 'string' }
+                }
+            }
+        },
+        400: error400,
+        403: error403,
+        404: error404,
+        500: error500
+    }
+}
