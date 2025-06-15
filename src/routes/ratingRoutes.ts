@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { createRating, getBookRatings, getMovieRatings, getUserRatings, modifyRating } from "../controllers/ratingControllers";
-import { createRatingSchema, getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema, modifyRatingSchema } from "../dtos/ratingDtos";
+import { createRating, deleteRating, getBookRatings, getMovieRatings, getUserRatings, modifyRating } from "../controllers/ratingControllers";
+import { createRatingSchema, deleteRatingSchema, getBookRatingsSchema, getMovieRatingsSchema, getUserRatingsSchema, modifyRatingSchema } from "../dtos/ratingDtos";
 import { authenticate } from "../middleware/auth";
 
 export const ratingRoutes = (fastify: FastifyInstance) => {
@@ -25,4 +25,9 @@ export const ratingRoutes = (fastify: FastifyInstance) => {
         schema: modifyRatingSchema,
         preHandler: [authenticate]
     }, modifyRating);
+
+    fastify.delete('/:id', {
+        schema: deleteRatingSchema,
+        preHandler: [authenticate]
+    }, deleteRating);
 }
