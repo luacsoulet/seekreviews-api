@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { AuthenticatedUser } from "../middleware/auth";
 
 export const getMovieRatings = async (request: FastifyRequest<{ Querystring: { movie_id: number } }>, reply: FastifyReply) => {
     const { movie_id } = request.query;
@@ -59,6 +60,27 @@ export const getUserRatings = async (request: FastifyRequest<{ Querystring: { us
         } else {
             return rows;
         }
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+export const createRating = async (request: FastifyRequest<{ Body: { movie_id: number | null, book_id: number | null, rating: number } }>, reply: FastifyReply) => {
+    const { movie_id, book_id, rating } = request.body;
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows: existingRatingRows } = await client.query('SELECT * FROM ratings WHERE movie_id = $1 AND book_id = $2 AND user_id = $3', [movie_id, book_id, decoded.id]);
+        if (existingRatingRows.length > 0) {
+            return reply.code(400).send({ message: 'Rating already exists' });
+        }
+
+        const { rows } = await client.query('INSERT INTO ratings (movie_id, book_id, user_id, rating) VALUES ($1, $2, $3, $4) RETURNING *', [movie_id, book_id, decoded.id, rating]);
+        return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
