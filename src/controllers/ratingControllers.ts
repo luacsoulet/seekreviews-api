@@ -67,8 +67,8 @@ export const getUserRatings = async (request: FastifyRequest<{ Querystring: { us
     }
 }
 
-export const createRating = async (request: FastifyRequest<{ Body: { movie_id: number | null, book_id: number | null, rating: number } }>, reply: FastifyReply) => {
-    const { movie_id, book_id, rating } = request.body;
+export const createRating = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { movie_id, book_id, rating } = request.body as { movie_id: number | null, book_id: number | null, rating: number };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
@@ -81,6 +81,32 @@ export const createRating = async (request: FastifyRequest<{ Body: { movie_id: n
 
         const { rows } = await client.query('INSERT INTO ratings (movie_id, book_id, user_id, rating) VALUES ($1, $2, $3, $4) RETURNING *', [movie_id, book_id, decoded.id, rating]);
         return rows[0];
+    } catch (error) {
+        return reply.code(500).send({ message: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+export const modifyRating = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+    const { rating } = request.body as { rating: number };
+
+    const decoded = await request.jwtVerify<AuthenticatedUser>();
+
+    const client = await request.server.pg.connect();
+    try {
+        const { rows: existingRatingRows } = await client.query('SELECT * FROM ratings WHERE id = $1 AND user_id = $2', [id, decoded.id]);
+        if (existingRatingRows.length === 0) {
+            return reply.code(404).send({ message: 'Rating not found' });
+        }
+        if (existingRatingRows[0].user_id !== decoded.id) {
+            return reply.code(403).send({ message: 'You are not the owner of this rating' });
+        }
+
+        const { rows: updatedRatingRows } = await client.query('UPDATE ratings SET rating = $1 WHERE id = $2 AND user_id = $3 RETURNING *', [rating, id, decoded.id]);
+
+        return updatedRatingRows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
