@@ -15,7 +15,7 @@ export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => 
     const client = await request.server.pg.connect();
     try {
         const { rows } = await client.query('SELECT * FROM users');
-        return rows;
+        return reply.code(200).send(rows);
     } finally {
         client.release();
     }
@@ -34,7 +34,7 @@ export const getUserById = async (request: FastifyRequest<{ Params: { id: number
         if (rows.length === 0) {
             return reply.code(404).send({ message: 'User not found' });
         }
-        return rows[0];
+        return reply.code(200).send(rows[0]);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
@@ -70,7 +70,7 @@ export const userFavorites = async (request: FastifyRequest<{ Params: { id: numb
             LEFT JOIN books ON favorites.book_id = books.id
             WHERE favorites.user_id = $1`,
             [id]);
-        return rows;
+        return reply.code(200).send(rows);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
@@ -105,7 +105,7 @@ export const userSeen = async (request: FastifyRequest<{ Params: { id: number } 
             LEFT JOIN movies ON seen.movie_id = movies.id
             LEFT JOIN books ON seen.book_id = books.id
             WHERE seen.user_id = $1`, [id]);
-        return rows;
+        return reply.code(200).send(rows);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
@@ -123,7 +123,9 @@ export const modifyUser = async (request: FastifyRequest, reply: FastifyReply) =
 
     if (!id) return reply.code(400).send({ message: 'Id is required' });
 
-    if (decoded.id !== id) return reply.code(403).send({ message: 'You are not authorized to modify this user' });
+    if (decoded.id !== id && !decoded.is_admin) {
+        return reply.code(403).send({ message: 'You are not authorized to modify this user' });
+    }
 
     const client = await request.server.pg.connect();
     try {
@@ -155,7 +157,7 @@ export const modifyUser = async (request: FastifyRequest, reply: FastifyReply) =
         const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
 
         const { rows } = await client.query(query, values);
-        return rows[0];
+        return reply.code(200).send(rows[0]);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
@@ -172,12 +174,14 @@ export const deleteUser = async (request: FastifyRequest, reply: FastifyReply) =
 
     if (!id) return reply.code(400).send({ message: 'Id is required' });
 
-    if (!decoded.is_admin && decoded.id !== id) return reply.code(403).send({ message: 'You are not an admin' });
+    if (decoded.id !== id && !decoded.is_admin) {
+        return reply.code(403).send({ message: 'You are not authorized to delete this user' });
+    }
 
     const client = await request.server.pg.connect();
     try {
         await client.query('DELETE FROM users WHERE id = $1', [id]);
-        return reply.code(204).send({ message: 'User deleted successfully' });
+        return reply.code(204).send();
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
