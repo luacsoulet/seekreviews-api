@@ -143,17 +143,7 @@ export const createBookSchema: FastifySchema = {
     description: 'Create a book',
     tags: ['Books'],
     security: [{ bearerAuth: [] }],
-    body: {
-        type: 'object',
-        properties: {
-            title: { type: 'string' },
-            description: { type: 'string' },
-            author: { type: 'string' },
-            genre: { type: 'string' },
-            cover_image: { type: 'string' },
-            publish_date: { type: 'string' }
-        }
-    },
+    consumes: ['multipart/form-data'],
     response: {
         200: {
             description: 'Book created successfully',
@@ -182,15 +172,11 @@ export const modifyBookSchema: FastifySchema = {
     description: 'Modify a book',
     tags: ['Books'],
     security: [{ bearerAuth: [] }],
-    body: {
+    consumes: ['multipart/form-data'],
+    params: {
         type: 'object',
         properties: {
-            title: { type: 'string', nullable: true },
-            description: { type: 'string', nullable: true },
-            author: { type: 'string', nullable: true },
-            genre: { type: 'string', nullable: true },
-            cover_image: { type: 'string', nullable: true },
-            publish_date: { type: 'string', nullable: true }
+            id: { type: 'number' }
         }
     },
     response: {
