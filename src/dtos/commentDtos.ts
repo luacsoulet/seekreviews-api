@@ -21,7 +21,7 @@ export const getMovieCommentsSchema: FastifySchema = {
                     movie_id: { type: 'number' },
                     book_id: { type: 'number', nullable: true },
                     user_id: { type: 'number' },
-                    comment: { type: 'string' },
+                    message: { type: 'string' },
                     created_at: { type: 'string' }
                 }
             }
@@ -53,7 +53,7 @@ export const getBookCommentsSchema: FastifySchema = {
                     book_id: { type: 'number' },
                     movie_id: { type: 'number', nullable: true },
                     user_id: { type: 'number' },
-                    comment: { type: 'string' },
+                    message: { type: 'string' },
                     created_at: { type: 'string' }
                 }
             }
