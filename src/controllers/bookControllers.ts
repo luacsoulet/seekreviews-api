@@ -17,8 +17,8 @@ export const getBooks = async (request: FastifyRequest<{ Querystring: { page: nu
     }
 }
 
-export const getBookById = async (request: FastifyRequest, reply: FastifyReply) => {
-    const id = request.params as { id: number };
+export const getBookById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
+    const { id } = request.params;
 
     const client = await request.server.pg.connect();
     try {
@@ -103,37 +103,37 @@ export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) =
         const values = [];
         let paramCount = 1;
 
-        if (title !== null) {
+        if (title !== null && title !== undefined) {
             updates.push(`title = $${paramCount}`);
             values.push(title);
             paramCount++;
         }
 
-        if (description !== null) {
+        if (description !== null && description !== undefined) {
             updates.push(`description = $${paramCount}`);
             values.push(description);
             paramCount++;
         }
 
-        if (author !== null) {
+        if (author !== null && author !== undefined) {
             updates.push(`author = $${paramCount}`);
             values.push(author);
             paramCount++;
         }
 
-        if (genre !== null) {
+        if (genre !== null && genre !== undefined) {
             updates.push(`genre = $${paramCount}`);
             values.push(genre);
             paramCount++;
         }
 
-        if (cover_image !== null) {
+        if (cover_image !== null && cover_image !== undefined) {
             updates.push(`cover_image = $${paramCount}`);
             values.push(cover_image);
             paramCount++;
         }
 
-        if (publish_date !== null) {
+        if (publish_date !== null && publish_date !== undefined) {
             updates.push(`publish_date = $${paramCount}`);
             values.push(publish_date);
             paramCount++;
@@ -143,15 +143,13 @@ export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) =
             return reply.code(400).send({ message: 'No fields to update' });
         }
 
-        const updateString = updates.join(', ');
+        values.push(id);
+        const query = `UPDATE books SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
 
-        const { rows } = await client.query(`
-            UPDATE books 
-            SET
-                ${updateString}
-            WHERE id = $${paramCount}
-            RETURNING *
-        `, [...values, id]);
+        const { rows } = await client.query(query, values);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Book not found' });
+        }
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -174,7 +172,7 @@ export const deleteBook = async (request: FastifyRequest, reply: FastifyReply) =
             return reply.code(404).send({ message: 'Book not found' });
         }
         await client.query('DELETE FROM books WHERE id = $1', [id]);
-        return reply.code(204).send({ message: 'Book deleted successfully' });
+        return reply.code(204).send();
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
