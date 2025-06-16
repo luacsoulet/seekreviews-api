@@ -6,6 +6,7 @@ import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from 'dotenv';
+import multipart, { ajvFilePlugin } from '@fastify/multipart';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import { movieRoutes } from './routes/movieRoutes';
@@ -21,7 +22,11 @@ const app: FastifyInstance = fastify({
         transport: {
             target: 'pino-pretty'
         }
-    }
+    },
+    ajv: {
+        plugins: [ajvFilePlugin]
+    },
+    bodyLimit: 1024 * 1024 * 10 // 10MB
 });
 
 app.register(postgres, {
@@ -100,6 +105,8 @@ app.register(swaggerUi, {
 app.register(jwt, {
     secret: process.env.JWT_SECRET || 'your-secret-key'
 });
+
+app.register(multipart, { attachFieldsToBody: true });
 
 app.register(authRoutes, { prefix: '/api/v1/auth' });
 app.register(userRoutes, { prefix: '/api/v1/users' });
