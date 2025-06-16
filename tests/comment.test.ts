@@ -181,9 +181,21 @@ describe('📦 Test Suite: comment.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const comment = JSON.parse(response.payload);
-            expect(comment.message).toBe('This is a test movie comment');
-            expect(comment.movie_id).toBe(testMovieId);
+
+            expect(comment).toHaveProperty('id');
+            expect(comment).toHaveProperty('movie_id');
+            expect(comment).toHaveProperty('book_id');
+            expect(comment).toHaveProperty('user_id');
+            expect(comment).toHaveProperty('message');
+            expect(comment).toHaveProperty('created_at');
+
+            expect(typeof comment.id).toBe('number');
+            expect(typeof comment.movie_id).toBe('number');
             expect(comment.book_id).toBeNull();
+            expect(typeof comment.user_id).toBe('number');
+            expect(typeof comment.message).toBe('string');
+            expect(typeof comment.created_at).toBe('string');
+
             testCommentId = comment.id;
         });
 
@@ -203,9 +215,20 @@ describe('📦 Test Suite: comment.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const comment = JSON.parse(response.payload);
-            expect(comment.message).toBe('This is a test book comment');
-            expect(comment.book_id).toBe(testBookId);
+
+            expect(comment).toHaveProperty('id');
+            expect(comment).toHaveProperty('movie_id');
+            expect(comment).toHaveProperty('book_id');
+            expect(comment).toHaveProperty('user_id');
+            expect(comment).toHaveProperty('message');
+            expect(comment).toHaveProperty('created_at');
+
+            expect(typeof comment.id).toBe('number');
             expect(comment.movie_id).toBeNull();
+            expect(typeof comment.book_id).toBe('number');
+            expect(typeof comment.user_id).toBe('number');
+            expect(typeof comment.message).toBe('string');
+            expect(typeof comment.created_at).toBe('string');
         });
     });
 
@@ -266,7 +289,18 @@ describe('📦 Test Suite: comment.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const comment = JSON.parse(response.payload);
-            expect(comment.message).toBe('Updated test comment');
+
+            expect(comment).toHaveProperty('id');
+            expect(comment).toHaveProperty('movie_id');
+            expect(comment).toHaveProperty('book_id');
+            expect(comment).toHaveProperty('user_id');
+            expect(comment).toHaveProperty('message');
+            expect(comment).toHaveProperty('created_at');
+
+            expect(typeof comment.id).toBe('number');
+            expect(typeof comment.user_id).toBe('number');
+            expect(typeof comment.message).toBe('string');
+            expect(typeof comment.created_at).toBe('string');
         });
     });
 

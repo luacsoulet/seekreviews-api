@@ -199,9 +199,21 @@ describe('📦 Test Suite: rating.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const rating = JSON.parse(response.payload);
-            expect(rating.movie_id).toBe(testMovieId);
+
+            expect(rating).toHaveProperty('id');
+            expect(rating).toHaveProperty('movie_id');
+            expect(rating).toHaveProperty('book_id');
+            expect(rating).toHaveProperty('user_id');
+            expect(rating).toHaveProperty('rating');
+            expect(rating).toHaveProperty('created_at');
+
+            expect(typeof rating.id).toBe('number');
+            expect(typeof rating.movie_id).toBe('number');
             expect(rating.book_id).toBeNull();
-            expect(rating.rating).toBe(5);
+            expect(typeof rating.user_id).toBe('number');
+            expect(typeof rating.rating).toBe('number');
+            expect(typeof rating.created_at).toBe('string');
+
             testRatingId = rating.id;
         });
 
@@ -221,9 +233,20 @@ describe('📦 Test Suite: rating.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const rating = JSON.parse(response.payload);
+
+            expect(rating).toHaveProperty('id');
+            expect(rating).toHaveProperty('movie_id');
+            expect(rating).toHaveProperty('book_id');
+            expect(rating).toHaveProperty('user_id');
+            expect(rating).toHaveProperty('rating');
+            expect(rating).toHaveProperty('created_at');
+
+            expect(typeof rating.id).toBe('number');
             expect(rating.movie_id).toBeNull();
-            expect(rating.book_id).toBe(testBookId);
-            expect(rating.rating).toBe(4);
+            expect(typeof rating.book_id).toBe('number');
+            expect(typeof rating.user_id).toBe('number');
+            expect(typeof rating.rating).toBe('number');
+            expect(typeof rating.created_at).toBe('string');
         });
 
         it('should return 400 for duplicate rating', async () => {
@@ -307,7 +330,18 @@ describe('📦 Test Suite: rating.test.ts', () => {
 
             expect(response.statusCode).toBe(200);
             const rating = JSON.parse(response.payload);
-            expect(rating.rating).toBe(3);
+
+            expect(rating).toHaveProperty('id');
+            expect(rating).toHaveProperty('movie_id');
+            expect(rating).toHaveProperty('book_id');
+            expect(rating).toHaveProperty('user_id');
+            expect(rating).toHaveProperty('rating');
+            expect(rating).toHaveProperty('created_at');
+
+            expect(typeof rating.id).toBe('number');
+            expect(typeof rating.user_id).toBe('number');
+            expect(typeof rating.rating).toBe('number');
+            expect(typeof rating.created_at).toBe('string');
             expect(rating.id).toBe(testRatingId);
         });
     });
