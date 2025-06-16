@@ -1,6 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import app from '../src/app';
 import { sign } from 'jsonwebtoken';
+import FormData from 'form-data';
+
+vi.mock('../src/middleware/cloudinary', () => ({
+    uploadToCloudinary: vi.fn().mockResolvedValue('https://res.cloudinary.com/test/image/upload/v123456789/test-book.jpg')
+}));
 
 describe('📦 Test Suite: book.test.ts', () => {
     let adminToken: string;
@@ -131,6 +136,63 @@ describe('📦 Test Suite: book.test.ts', () => {
             expect(book.author).toBe('Test Author');
             testBookId = book.id;
         });
+
+        it('should create book with multipart form data', async () => {
+            const imageBuffer = Buffer.from('fake-book-image-data');
+
+            const form = new FormData();
+            form.append('title', 'Test Book Multipart');
+            form.append('description', 'Test description multipart');
+            form.append('author', 'Test Author Multipart');
+            form.append('genre', 'Science Fiction');
+            form.append('publish_date', '2023-02-01');
+            form.append('cover_image', imageBuffer, {
+                filename: 'test-book-image.png',
+                contentType: 'image/png'
+            });
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/books',
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const book = JSON.parse(response.payload);
+            expect(book.title).toBe('Test Book Multipart');
+            expect(book.author).toBe('Test Author Multipart');
+            expect(book.genre).toBe('Science Fiction');
+            expect(book.cover_image).toBe('https://res.cloudinary.com/test/image/upload/v123456789/test-book.jpg');
+        });
+
+        it('should create book with multipart without file', async () => {
+            const form = new FormData();
+            form.append('title', 'Test Book No File');
+            form.append('description', 'Test description no file');
+            form.append('author', 'Test Author No File');
+            form.append('genre', 'Mystery');
+            form.append('publish_date', '2023-03-01');
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/books',
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const book = JSON.parse(response.payload);
+            expect(book.title).toBe('Test Book No File');
+            expect(book.genre).toBe('Mystery');
+            expect([null, '']).toContain(book.cover_image);
+        });
     });
 
     describe('🔹 GET /books/:id', () => {
@@ -201,6 +263,57 @@ describe('📦 Test Suite: book.test.ts', () => {
             const book = JSON.parse(response.payload);
             expect(book.title).toBe('Updated Book');
             expect(book.description).toBe('Updated description');
+        });
+
+        it('should update book with multipart form data', async () => {
+            const imageBuffer = Buffer.from('fake-updated-book-image');
+
+            const form = new FormData();
+            form.append('title', 'Updated Book Multipart');
+            form.append('author', 'Updated Author Multipart');
+            form.append('genre', 'Updated Genre');
+            form.append('cover_image', imageBuffer, {
+                filename: 'updated-book-image.png',
+                contentType: 'image/png'
+            });
+
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/books/${testBookId}`,
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const book = JSON.parse(response.payload);
+            expect(book.title).toBe('Updated Book Multipart');
+            expect(book.author).toBe('Updated Author Multipart');
+            expect(book.genre).toBe('Updated Genre');
+            expect(book.cover_image).toBe('https://res.cloudinary.com/test/image/upload/v123456789/test-book.jpg');
+        });
+
+        it('should update book with multipart without file', async () => {
+            const form = new FormData();
+            form.append('title', 'Updated Book No File');
+            form.append('description', 'Updated description no file');
+
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/books/${testBookId}`,
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const book = JSON.parse(response.payload);
+            expect(book.title).toBe('Updated Book No File');
+            expect(book.description).toBe('Updated description no file');
         });
     });
 
