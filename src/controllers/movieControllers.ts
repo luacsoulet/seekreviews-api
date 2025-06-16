@@ -70,8 +70,6 @@ export const createMovie = async (request: FastifyRequest, reply: FastifyReply) 
 
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
 
-    console.log(title, cover_image, description, director, release_date, genre);
-
     const client = await request.server.pg.connect();
     try {
         const { rows } = await client.query('INSERT INTO movies (title, cover_image, description, director, release_date, avg_rating, genre) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, cover_image, description, director, release_date, 0, genre]);
