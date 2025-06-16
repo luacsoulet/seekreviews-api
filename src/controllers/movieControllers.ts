@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthenticatedUser } from "../middleware/auth";
+import { uploadToCloudinary } from "../middleware/cloudinary";
 
 export const getMovies = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
@@ -64,16 +65,39 @@ export const getMovieByGenre = async (request: FastifyRequest<{ Querystring: { g
 }
 
 export const createMovie = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { title, cover_image, description, director, release_date, genre } = request.body as { title: string, cover_image: string, description: string, director: string, release_date: string, genre: string };
-
     const decoded = await request.jwtVerify<AuthenticatedUser>();
-
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    let coverImageUrl = null;
+
+    const file: any = (request.body as any)?.cover_image;
+    if (file && file.toBuffer) {
+        try {
+            const buffer = await file.toBuffer();
+            coverImageUrl = await uploadToCloudinary(buffer);
+        } catch (error) {
+            return reply.code(500).send({ message: 'Error during uploading image' });
+        }
+    }
+
+    const body = request.body as any;
+    const title = body.title?.value || body.title;
+    const description = body.description?.value || body.description;
+    const director = body.director?.value || body.director;
+    const release_date = body.release_date?.value || body.release_date;
+    const genre = body.genre?.value || body.genre;
+
+    if (!coverImageUrl && body.cover_image && typeof body.cover_image === 'string') {
+        coverImageUrl = body.cover_image;
+    }
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('INSERT INTO movies (title, cover_image, description, director, release_date, avg_rating, genre) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, cover_image, description, director, release_date, 0, genre]);
-        return rows[0];
+        const { rows } = await client.query(
+            'INSERT INTO movies (title, cover_image, description, director, release_date, avg_rating, genre) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [title, coverImageUrl, description, director, release_date, 0, genre]
+        );
+        return reply.code(201).send(rows[0]);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
@@ -82,62 +106,83 @@ export const createMovie = async (request: FastifyRequest, reply: FastifyReply) 
 }
 
 export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as { id: number };
-    const { title, cover_image, description, director, release_date, genre } = request.body as { title: string | null, cover_image: string | null, description: string | null, director: string | null, release_date: string | null, genre: string | null };
-
     const decoded = await request.jwtVerify<AuthenticatedUser>();
-
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const { id } = request.params as { id: number };
+
+    let coverImageUrl = null;
+
+    const file: any = (request.body as any)?.file || (request.body as any)?.cover_image;
+    if (file && file.toBuffer) {
+        try {
+            const buffer = await file.toBuffer();
+            coverImageUrl = await uploadToCloudinary(buffer);
+        } catch (error) {
+            return reply.code(500).send({ message: 'Error during uploading image' });
+        }
+    }
+
+    const body = request.body as any;
+    const title = body.title?.value || body.title;
+    const description = body.description?.value || body.description;
+    const director = body.director?.value || body.director;
+    const release_date = body.release_date?.value || body.release_date;
+    const genre = body.genre?.value || body.genre;
+
+    if (!coverImageUrl && body.cover_image && typeof body.cover_image === 'string') {
+        coverImageUrl = body.cover_image;
+    }
+
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (title !== undefined) {
+        updates.push(`title = $${paramCount}`);
+        values.push(title);
+        paramCount++;
+    }
+    if (coverImageUrl !== null) {
+        updates.push(`cover_image = $${paramCount}`);
+        values.push(coverImageUrl);
+        paramCount++;
+    }
+    if (description !== undefined) {
+        updates.push(`description = $${paramCount}`);
+        values.push(description);
+        paramCount++;
+    }
+    if (director !== undefined) {
+        updates.push(`director = $${paramCount}`);
+        values.push(director);
+        paramCount++;
+    }
+    if (release_date !== undefined) {
+        updates.push(`release_date = $${paramCount}`);
+        values.push(release_date);
+        paramCount++;
+    }
+    if (genre !== undefined) {
+        updates.push(`genre = $${paramCount}`);
+        values.push(genre);
+        paramCount++;
+    }
+
+    if (updates.length === 0) {
+        return reply.code(400).send({ message: 'No fields to update' });
+    }
+
+    values.push(id);
+    const query = `UPDATE movies SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
 
     const client = await request.server.pg.connect();
     try {
-        const updates = [];
-        const values = [];
-        let paramCount = 1;
-
-        if (title !== null && title !== undefined) {
-            updates.push(`title = $${paramCount}`);
-            values.push(title);
-            paramCount++;
-        }
-        if (cover_image !== null && cover_image !== undefined) {
-            updates.push(`cover_image = $${paramCount}`);
-            values.push(cover_image);
-            paramCount++;
-        }
-        if (description !== null && description !== undefined) {
-            updates.push(`description = $${paramCount}`);
-            values.push(description);
-            paramCount++;
-        }
-        if (director !== null && director !== undefined) {
-            updates.push(`director = $${paramCount}`);
-            values.push(director);
-            paramCount++;
-        }
-        if (release_date !== null && release_date !== undefined) {
-            updates.push(`release_date = $${paramCount}`);
-            values.push(release_date);
-            paramCount++;
-        }
-        if (genre !== null && genre !== undefined) {
-            updates.push(`genre = $${paramCount}`);
-            values.push(genre);
-            paramCount++;
-        }
-
-        if (updates.length === 0) {
-            return reply.code(400).send({ message: 'No fields to update' });
-        }
-
-        values.push(id);
-        const query = `UPDATE movies SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
-
         const { rows } = await client.query(query, values);
         if (rows.length === 0) {
             return reply.code(404).send({ message: 'Movie not found' });
         }
-        return rows[0];
+        return reply.code(200).send(rows[0]);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
