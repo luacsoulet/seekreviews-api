@@ -97,32 +97,32 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
         const values = [];
         let paramCount = 1;
 
-        if (title !== null) {
+        if (title !== null && title !== undefined) {
             updates.push(`title = $${paramCount}`);
             values.push(title);
             paramCount++;
         }
-        if (cover_image !== null) {
+        if (cover_image !== null && cover_image !== undefined) {
             updates.push(`cover_image = $${paramCount}`);
             values.push(cover_image);
             paramCount++;
         }
-        if (description !== null) {
+        if (description !== null && description !== undefined) {
             updates.push(`description = $${paramCount}`);
             values.push(description);
             paramCount++;
         }
-        if (director !== null) {
+        if (director !== null && director !== undefined) {
             updates.push(`director = $${paramCount}`);
             values.push(director);
             paramCount++;
         }
-        if (release_date !== null) {
+        if (release_date !== null && release_date !== undefined) {
             updates.push(`release_date = $${paramCount}`);
             values.push(release_date);
             paramCount++;
         }
-        if (genre !== null) {
+        if (genre !== null && genre !== undefined) {
             updates.push(`genre = $${paramCount}`);
             values.push(genre);
             paramCount++;
@@ -132,15 +132,13 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
             return reply.code(400).send({ message: 'No fields to update' });
         }
 
-        const updateString = updates.join(', ');
+        values.push(id);
+        const query = `UPDATE movies SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
 
-        const { rows } = await client.query(`
-            UPDATE movies 
-            SET
-                ${updateString}
-            WHERE id = $8 
-            RETURNING *
-        `, [...values, id]);
+        const { rows } = await client.query(query, values);
+        if (rows.length === 0) {
+            return reply.code(404).send({ message: 'Movie not found' });
+        }
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -150,7 +148,7 @@ export const modifyMovie = async (request: FastifyRequest, reply: FastifyReply) 
 }
 
 export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) => {
-    const id = request.params as { id: number }
+    const { id } = request.params as { id: number };
 
     const decoded = await request.jwtVerify<AuthenticatedUser>();
 
@@ -163,7 +161,7 @@ export const deleteMovie = async (request: FastifyRequest, reply: FastifyReply) 
             return reply.code(404).send({ message: 'Movie not found' });
         }
         await client.query('DELETE FROM movies WHERE id = $1', [id]);
-        return reply.code(204).send({ message: 'Movie deleted successfully' });
+        return reply.code(204).send();
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
