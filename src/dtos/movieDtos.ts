@@ -139,17 +139,7 @@ export const createMovieSchema: FastifySchema = {
     description: 'Create a movie',
     tags: ['Movies'],
     security: [{ bearerAuth: [] }],
-    body: {
-        type: 'object',
-        properties: {
-            title: { type: 'string' },
-            cover_image: { type: 'string' },
-            description: { type: 'string' },
-            director: { type: 'string' },
-            release_date: { type: 'string' },
-            genre: { type: 'string' }
-        }
-    },
+    consumes: ['multipart/form-data'],
     response: {
         201: {
             description: 'Movie created successfully',
@@ -178,21 +168,11 @@ export const modifyMovieSchema: FastifySchema = {
     description: 'Modify a movie',
     tags: ['Movies'],
     security: [{ bearerAuth: [] }],
+    consumes: ['multipart/form-data'],
     params: {
         type: 'object',
         properties: {
             id: { type: 'number' }
-        }
-    },
-    body: {
-        type: 'object',
-        properties: {
-            title: { type: 'string', nullable: true },
-            cover_image: { type: 'string', nullable: true },
-            description: { type: 'string', nullable: true },
-            director: { type: 'string', nullable: true },
-            release_date: { type: 'string', nullable: true },
-            genre: { type: 'string', nullable: true }
         }
     },
     response: {
