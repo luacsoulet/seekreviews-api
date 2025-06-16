@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthenticatedUser } from "../middleware/auth";
+import { uploadToCloudinary } from "../middleware/cloudinary";
 
 export const getBooks = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
@@ -72,15 +73,38 @@ export const getBookByGenre = async (request: FastifyRequest<{ Querystring: { ge
 }
 
 export const createBook = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string, description: string, author: string, genre: string, cover_image: string, publish_date: string };
-
     const decoded = await request.jwtVerify<AuthenticatedUser>();
-
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    let coverImageUrl = null;
+
+    const file: any = (request.body as any)?.cover_image;
+    if (file && file.toBuffer) {
+        try {
+            const buffer = await file.toBuffer();
+            coverImageUrl = await uploadToCloudinary(buffer);
+        } catch (error) {
+            return reply.code(500).send({ message: 'Error during uploading image' });
+        }
+    }
+
+    const body = request.body as any;
+    const title = body.title?.value || body.title;
+    const description = body.description?.value || body.description;
+    const author = body.author?.value || body.author;
+    const genre = body.genre?.value || body.genre;
+    const publish_date = body.publish_date?.value || body.publish_date;
+
+    if (!coverImageUrl && body.cover_image && typeof body.cover_image === 'string') {
+        coverImageUrl = body.cover_image;
+    }
 
     const client = await request.server.pg.connect();
     try {
-        const { rows } = await client.query('INSERT INTO books (title, description, author, genre, cover_image, publish_date, avg_rating) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [title, description, author, genre, cover_image, publish_date, 0]);
+        const { rows } = await client.query(
+            'INSERT INTO books (title, description, author, genre, cover_image, publish_date, avg_rating) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [title, description, author, genre, coverImageUrl, publish_date, 0]
+        );
         return rows[0];
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
@@ -90,12 +114,33 @@ export const createBook = async (request: FastifyRequest, reply: FastifyReply) =
 }
 
 export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as { id: number };
-    const { title, description, author, genre, cover_image, publish_date } = request.body as { title: string | null, description: string | null, author: string | null, genre: string | null, cover_image: string | null, publish_date: string | null };
-
     const decoded = await request.jwtVerify<AuthenticatedUser>();
-
     if (!decoded.is_admin) return reply.code(403).send({ message: 'You are not an admin' });
+
+    const { id } = request.params as { id: number };
+
+    let coverImageUrl = null;
+
+    const file: any = (request.body as any)?.file || (request.body as any)?.cover_image;
+    if (file && file.toBuffer) {
+        try {
+            const buffer = await file.toBuffer();
+            coverImageUrl = await uploadToCloudinary(buffer);
+        } catch (error) {
+            return reply.code(500).send({ message: 'Error during uploading image' });
+        }
+    }
+
+    const body = request.body as any;
+    const title = body.title?.value || body.title;
+    const description = body.description?.value || body.description;
+    const author = body.author?.value || body.author;
+    const genre = body.genre?.value || body.genre;
+    const publish_date = body.publish_date?.value || body.publish_date;
+
+    if (!coverImageUrl && body.cover_image && typeof body.cover_image === 'string') {
+        coverImageUrl = body.cover_image;
+    }
 
     const client = await request.server.pg.connect();
     try {
@@ -127,9 +172,9 @@ export const modifyBook = async (request: FastifyRequest, reply: FastifyReply) =
             paramCount++;
         }
 
-        if (cover_image !== null && cover_image !== undefined) {
+        if (coverImageUrl !== null) {
             updates.push(`cover_image = $${paramCount}`);
-            values.push(cover_image);
+            values.push(coverImageUrl);
             paramCount++;
         }
 
