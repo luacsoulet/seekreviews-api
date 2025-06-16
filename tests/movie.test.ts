@@ -1,6 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import app from '../src/app';
 import { sign } from 'jsonwebtoken';
+import FormData from 'form-data';
+
+vi.mock('../src/middleware/cloudinary', () => ({
+    uploadToCloudinary: vi.fn().mockResolvedValue('https://res.cloudinary.com/test/image/upload/v123456789/test-image.jpg')
+}));
 
 describe('📦 Test Suite: movie.test.ts', () => {
     let adminToken: string;
@@ -121,10 +126,67 @@ describe('📦 Test Suite: movie.test.ts', () => {
                 }
             });
 
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             const movie = JSON.parse(response.payload);
             expect(movie.title).toBe('Test Movie');
             testMovieId = movie.id;
+        });
+
+        it('should create movie with multipart form data', async () => {
+            const imageBuffer = Buffer.from('fake-image-data');
+
+            const form = new FormData();
+            form.append('title', 'Test Movie Multipart');
+            form.append('description', 'Test description multipart');
+            form.append('director', 'Test Director Multipart');
+            form.append('release_date', '2023-01-01');
+            form.append('genre', 'Drama');
+            form.append('cover_image', imageBuffer, {
+                filename: 'test-movie-image.png',
+                contentType: 'image/png'
+            });
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/movies',
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(201);
+            const movie = JSON.parse(response.payload);
+            expect(movie.title).toBe('Test Movie Multipart');
+            expect(movie.director).toBe('Test Director Multipart');
+            expect(movie.genre).toBe('Drama');
+            expect(movie.cover_image).toBe('https://res.cloudinary.com/test/image/upload/v123456789/test-image.jpg');
+        });
+
+        it('should create movie with multipart without file', async () => {
+            const form = new FormData();
+            form.append('title', 'Test Movie No File');
+            form.append('description', 'Test description no file');
+            form.append('director', 'Test Director No File');
+            form.append('release_date', '2023-01-01');
+            form.append('genre', 'Comedy');
+
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/movies',
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(201);
+            const movie = JSON.parse(response.payload);
+            expect(movie.title).toBe('Test Movie No File');
+            expect(movie.genre).toBe('Comedy');
+            expect([null, '']).toContain(movie.cover_image);
         });
     });
 
@@ -193,6 +255,55 @@ describe('📦 Test Suite: movie.test.ts', () => {
             expect(response.statusCode).toBe(200);
             const movie = JSON.parse(response.payload);
             expect(movie.title).toBe('Updated Movie');
+        });
+
+        it('should update movie with multipart form data', async () => {
+            const imageBuffer = Buffer.from('fake-updated-image-data');
+
+            const form = new FormData();
+            form.append('title', 'Updated Movie Multipart');
+            form.append('description', 'Updated description multipart');
+            form.append('cover_image', imageBuffer, {
+                filename: 'updated-movie-image.png',
+                contentType: 'image/png'
+            });
+
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/movies/${testMovieId}`,
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const movie = JSON.parse(response.payload);
+            expect(movie.title).toBe('Updated Movie Multipart');
+            expect(movie.description).toBe('Updated description multipart');
+            expect(movie.cover_image).toBe('https://res.cloudinary.com/test/image/upload/v123456789/test-image.jpg');
+        });
+
+        it('should update movie with multipart without file', async () => {
+            const form = new FormData();
+            form.append('title', 'Updated Movie No File');
+            form.append('genre', 'Thriller');
+
+            const response = await app.inject({
+                method: 'PATCH',
+                url: `/api/v1/movies/${testMovieId}`,
+                headers: {
+                    authorization: `Bearer ${adminToken}`,
+                    'content-type': `multipart/form-data; boundary=${form.getBoundary()}`
+                },
+                payload: form.getBuffer()
+            });
+
+            expect(response.statusCode).toBe(200);
+            const movie = JSON.parse(response.payload);
+            expect(movie.title).toBe('Updated Movie No File');
+            expect(movie.genre).toBe('Thriller');
         });
     });
 
