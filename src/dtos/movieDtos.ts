@@ -21,8 +21,9 @@ export const getMoviesSchema: FastifySchema = {
                     title: { type: 'string' },
                     cover_image: { type: 'string' },
                     description: { type: 'string' },
+                    director: { type: 'string' },
                     release_date: { type: 'string' },
-                    rating: { type: 'number' },
+                    avg_rating: { type: 'number' },
                     genre: { type: 'string' },
                     created_at: { type: 'string' }
                 }
@@ -53,8 +54,9 @@ export const getMovieByIdSchema: FastifySchema = {
                 title: { type: 'string' },
                 cover_image: { type: 'string' },
                 description: { type: 'string' },
+                director: { type: 'string' },
                 release_date: { type: 'string' },
-                rating: { type: 'number' },
+                avg_rating: { type: 'number' },
                 genre: { type: 'string' },
                 created_at: { type: 'string' }
             }
@@ -87,7 +89,7 @@ export const getMovieByTitleSchema: FastifySchema = {
                     cover_image: { type: 'string' },
                     description: { type: 'string' },
                     release_date: { type: 'string' },
-                    rating: { type: 'number' },
+                    avg_rating: { type: 'number' },
                     genre: { type: 'string' },
                     created_at: { type: 'string' }
                 }
@@ -122,7 +124,7 @@ export const getMovieByGenreSchema: FastifySchema = {
                     cover_image: { type: 'string' },
                     description: { type: 'string' },
                     release_date: { type: 'string' },
-                    rating: { type: 'number' },
+                    avg_rating: { type: 'number' },
                     genre: { type: 'string' },
                     created_at: { type: 'string' }
                 }
@@ -140,6 +142,39 @@ export const createMovieSchema: FastifySchema = {
     tags: ['Movies'],
     security: [{ bearerAuth: [] }],
     consumes: ['multipart/form-data'],
+    body: {
+        type: 'object',
+        properties: {
+            title: {
+                type: 'string',
+                description: 'Movie title'
+            },
+            description: {
+                type: 'string',
+                description: 'Movie description'
+            },
+            director: {
+                type: 'string',
+                description: 'Movie director'
+            },
+            release_date: {
+                type: 'string',
+                format: 'date',
+                description: 'Release date (YYYY-MM-DD)'
+            },
+            genre: {
+                type: 'string',
+                description: 'Movie genre'
+            },
+            cover_image: {
+                type: 'string',
+                format: 'binary',
+                description: 'Cover image file (optional)'
+            }
+        },
+        required: ['title', 'description', 'director', 'release_date', 'genre'],
+        additionalProperties: true
+    },
     response: {
         201: {
             description: 'Movie created successfully',
@@ -174,6 +209,38 @@ export const modifyMovieSchema: FastifySchema = {
         properties: {
             id: { type: 'number' }
         }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            title: {
+                type: 'string',
+                description: 'Movie title'
+            },
+            description: {
+                type: 'string',
+                description: 'Movie description'
+            },
+            director: {
+                type: 'string',
+                description: 'Movie director'
+            },
+            release_date: {
+                type: 'string',
+                format: 'date',
+                description: 'Release date (YYYY-MM-DD)'
+            },
+            genre: {
+                type: 'string',
+                description: 'Movie genre'
+            },
+            cover_image: {
+                type: 'string',
+                format: 'binary',
+                description: 'Cover image file (optional)'
+            }
+        },
+        additionalProperties: true
     },
     response: {
         200: {
