@@ -105,7 +105,7 @@ export const createBook = async (request: FastifyRequest, reply: FastifyReply) =
             'INSERT INTO books (title, description, author, genre, cover_image, publish_date, avg_rating) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
             [title, description, author, genre, coverImageUrl, publish_date, 0]
         );
-        return rows[0];
+        return reply.code(201).send(rows[0]);
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {

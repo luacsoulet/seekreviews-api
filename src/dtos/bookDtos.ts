@@ -144,8 +144,41 @@ export const createBookSchema: FastifySchema = {
     tags: ['Books'],
     security: [{ bearerAuth: [] }],
     consumes: ['multipart/form-data'],
+    body: {
+        type: 'object',
+        properties: {
+            title: {
+                type: 'string',
+                description: 'Book title'
+            },
+            description: {
+                type: 'string',
+                description: 'Book description'
+            },
+            author: {
+                type: 'string',
+                description: 'Book author'
+            },
+            genre: {
+                type: 'string',
+                description: 'Book genre'
+            },
+            publish_date: {
+                type: 'string',
+                format: 'date',
+                description: 'Publication date (YYYY-MM-DD)'
+            },
+            cover_image: {
+                type: 'string',
+                format: 'binary',
+                description: 'Cover image file (optional)'
+            }
+        },
+        required: ['title', 'description', 'author', 'genre', 'publish_date'],
+        additionalProperties: true
+    },
     response: {
-        200: {
+        201: {
             description: 'Book created successfully',
             type: 'object',
             properties: {
@@ -178,6 +211,38 @@ export const modifyBookSchema: FastifySchema = {
         properties: {
             id: { type: 'number' }
         }
+    },
+    body: {
+        type: 'object',
+        properties: {
+            title: {
+                type: 'string',
+                description: 'Book title'
+            },
+            description: {
+                type: 'string',
+                description: 'Book description'
+            },
+            author: {
+                type: 'string',
+                description: 'Book author'
+            },
+            genre: {
+                type: 'string',
+                description: 'Book genre'
+            },
+            publish_date: {
+                type: 'string',
+                format: 'date',
+                description: 'Publication date (YYYY-MM-DD)'
+            },
+            cover_image: {
+                type: 'string',
+                format: 'binary',
+                description: 'Cover image file (optional)'
+            }
+        },
+        additionalProperties: true
     },
     response: {
         200: {

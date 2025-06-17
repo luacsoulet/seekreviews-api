@@ -22,12 +22,14 @@ export const movieRoutes = async (fastify: FastifyInstance) => {
 
     fastify.post('/', {
         schema: createMovieSchema,
-        preHandler: [authenticate]
+        preHandler: [authenticate],
+        attachValidation: true
     }, createMovie);
 
     fastify.patch('/:id', {
         schema: modifyMovieSchema,
-        preHandler: [authenticate]
+        preHandler: [authenticate],
+        attachValidation: true
     }, modifyMovie);
 
     fastify.delete('/:id', {
