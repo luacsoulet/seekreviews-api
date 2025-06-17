@@ -130,7 +130,7 @@ describe('📦 Test Suite: book.test.ts', () => {
                 }
             });
 
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             const book = JSON.parse(response.payload);
             expect(book.title).toBe('Test Book');
             expect(book.author).toBe('Test Author');
@@ -161,7 +161,7 @@ describe('📦 Test Suite: book.test.ts', () => {
                 payload: form.getBuffer()
             });
 
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             const book = JSON.parse(response.payload);
             expect(book.title).toBe('Test Book Multipart');
             expect(book.author).toBe('Test Author Multipart');
@@ -187,7 +187,7 @@ describe('📦 Test Suite: book.test.ts', () => {
                 payload: form.getBuffer()
             });
 
-            expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(201);
             const book = JSON.parse(response.payload);
             expect(book.title).toBe('Test Book No File');
             expect(book.genre).toBe('Mystery');
