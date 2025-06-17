@@ -22,12 +22,14 @@ export const bookRoutes = async (fastify: FastifyInstance) => {
 
     fastify.post('/', {
         schema: createBookSchema,
-        preHandler: [authenticate]
+        preHandler: [authenticate],
+        attachValidation: true
     }, createBook);
 
     fastify.patch('/:id', {
         schema: modifyBookSchema,
-        preHandler: [authenticate]
+        preHandler: [authenticate],
+        attachValidation: true
     }, modifyBook);
 
     fastify.delete('/:id', {
