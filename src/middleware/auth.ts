@@ -28,3 +28,17 @@ export const authenticate = async (request: FastifyRequest, reply: FastifyReply)
         });
     }
 };
+
+export const optionnalAuthenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const token = request.headers.authorization?.replace('Bearer ', '');
+        if (token) {
+            const decoded = await request.jwtVerify<AuthenticatedUser>();
+            (request as any).user = decoded;
+        } else {
+            (request as any).user = null;
+        }
+    } catch (err) {
+        (request as any).user = null;
+    }
+};

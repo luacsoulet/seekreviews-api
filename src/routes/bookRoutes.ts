@@ -1,16 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { getBookById, getBookByGenre, getBookByTitle, getBooks, createBook, modifyBook, deleteBook } from "../controllers/bookControllers";
 import { getBookByIdSchema, getBookByGenreSchema, getBookByTitleSchema, getBooksSchema, createBookSchema, modifyBookSchema, deleteBookSchema } from "../dtos/bookDtos";
-import { authenticate } from "../middleware/auth";
+import { authenticate, optionnalAuthenticate } from "../middleware/auth";
 
 export const bookRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/', {
         schema: getBooksSchema,
     }, getBooks);
-
-    fastify.get('/:id', {
-        schema: getBookByIdSchema,
-    }, getBookById);
 
     fastify.get('/search', {
         schema: getBookByTitleSchema,
@@ -19,6 +15,11 @@ export const bookRoutes = async (fastify: FastifyInstance) => {
     fastify.get('/genre', {
         schema: getBookByGenreSchema,
     }, getBookByGenre);
+
+    fastify.get('/:id', {
+        schema: getBookByIdSchema,
+        preHandler: [optionnalAuthenticate],
+    }, getBookById);
 
     fastify.post('/', {
         schema: createBookSchema,

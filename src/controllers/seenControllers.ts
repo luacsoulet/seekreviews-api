@@ -16,10 +16,10 @@ export const postSeen = async (request: FastifyRequest, reply: FastifyReply) => 
             let existingSeenParams;
 
             if (movie_id !== null) {
-                existingSeenQuery = 'SELECT * FROM seen WHERE user_id = $1 AND movie_id = $2 AND book_id IS NULL';
+                existingSeenQuery = 'SELECT * FROM seen WHERE user_id = $1 AND movie_id = $2';
                 existingSeenParams = [decoded.id, movie_id];
             } else {
-                existingSeenQuery = 'SELECT * FROM seen WHERE user_id = $1 AND book_id = $2 AND movie_id IS NULL';
+                existingSeenQuery = 'SELECT * FROM seen WHERE user_id = $1 AND book_id = $2';
                 existingSeenParams = [decoded.id, book_id];
             }
 

@@ -39,6 +39,7 @@ export const getBooksSchema: FastifySchema = {
 export const getBookByIdSchema: FastifySchema = {
     description: 'Get a book by id',
     tags: ['Books'],
+    security: [{ bearerAuth: [] }],
     params: {
         type: 'object',
         properties: {
@@ -58,7 +59,9 @@ export const getBookByIdSchema: FastifySchema = {
                 cover_image: { type: 'string' },
                 publish_date: { type: 'string' },
                 avg_rating: { type: 'number' },
-                created_at: { type: 'string' }
+                created_at: { type: 'string' },
+                is_seen: { type: 'boolean' },
+                seen_id: { type: 'number', nullable: true }
             }
         },
         400: error400,
