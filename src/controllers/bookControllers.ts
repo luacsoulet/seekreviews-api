@@ -2,9 +2,9 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthenticatedUser } from "../middleware/auth";
 import { uploadToCloudinary } from "../middleware/cloudinary";
 
-export const getBooks = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
+export const getBooks = async (request: FastifyRequest<{ Querystring: { page: number, limit: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
-    const limit = 20;
+    const limit = request.query.limit || 20;
     const offset = (page - 1) * limit;
 
     const client = await request.server.pg.connect();
@@ -18,8 +18,12 @@ export const getBooks = async (request: FastifyRequest<{ Querystring: { page: nu
     }
 }
 
-export const getBookById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
-    const { id } = request.params;
+export const getBookById = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+
+    let userId: number | null = null;
+    const decoded = request.user as AuthenticatedUser;
+    if (decoded) userId = decoded.id;
 
     const client = await request.server.pg.connect();
     try {
@@ -27,7 +31,19 @@ export const getBookById = async (request: FastifyRequest<{ Params: { id: number
         if (rows.length === 0) {
             return reply.code(404).send({ message: 'Book not found' });
         }
-        return rows[0];
+        const book = rows[0];
+        if (userId) {
+            const { rows: seenRows } = await client.query(
+                'SELECT * FROM seen WHERE user_id = $1 AND book_id = $2',
+                [userId, id]
+            );
+            book.is_seen = seenRows.length > 0;
+            book.seen_id = seenRows.length > 0 ? seenRows[0].id : null;
+        } else {
+            book.is_seen = false;
+            book.seen_id = null;
+        }
+        return book;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
