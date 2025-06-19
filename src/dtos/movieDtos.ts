@@ -39,6 +39,7 @@ export const getMoviesSchema: FastifySchema = {
 export const getMovieByIdSchema: FastifySchema = {
     description: 'Get a movie by id',
     tags: ['Movies'],
+    security: [{ bearerAuth: [] }],
     params: {
         type: 'object',
         properties: {
@@ -58,7 +59,9 @@ export const getMovieByIdSchema: FastifySchema = {
                 release_date: { type: 'string' },
                 avg_rating: { type: 'number' },
                 genre: { type: 'string' },
-                created_at: { type: 'string' }
+                created_at: { type: 'string' },
+                is_seen: { type: 'boolean' },
+                seen_id: { type: 'number', nullable: true }
             }
         },
         400: error400,
