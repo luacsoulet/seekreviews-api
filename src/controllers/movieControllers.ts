@@ -2,9 +2,9 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthenticatedUser } from "../middleware/auth";
 import { uploadToCloudinary } from "../middleware/cloudinary";
 
-export const getMovies = async (request: FastifyRequest<{ Querystring: { page: number } }>, reply: FastifyReply) => {
+export const getMovies = async (request: FastifyRequest<{ Querystring: { page: number, limit: number } }>, reply: FastifyReply) => {
     const page = request.query.page || 1;
-    const limit = 20;
+    const limit = request.query.limit || 20;
     const offset = (page - 1) * limit;
 
     const client = await request.server.pg.connect();
@@ -18,14 +18,27 @@ export const getMovies = async (request: FastifyRequest<{ Querystring: { page: n
     }
 }
 
-export const getMovieById = async (request: FastifyRequest<{ Params: { id: number } }>, reply: FastifyReply) => {
-    const id = request.params.id;
+export const getMovieById = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: number };
+
+    let userId: number | null = null;
+    const decoded = request.user as AuthenticatedUser;
+    if (decoded) userId = decoded.id;
 
     const client = await request.server.pg.connect();
     try {
         const { rows } = await client.query('SELECT * FROM movies WHERE id = $1', [id]);
         if (rows.length === 0) return reply.code(404).send({ message: 'Movie not found' });
-        return rows[0];
+        const movie = rows[0];
+        if (userId) {
+            const { rows: seenRows } = await client.query('SELECT * FROM seen WHERE user_id = $1 AND movie_id = $2', [userId, id]);
+            movie.is_seen = seenRows.length > 0;
+            movie.seen_id = seenRows.length > 0 ? seenRows[0].id : null;
+        } else {
+            movie.is_seen = false;
+            movie.seen_id = null;
+        }
+        return movie;
     } catch (error) {
         return reply.code(500).send({ message: 'Internal server error' });
     } finally {
